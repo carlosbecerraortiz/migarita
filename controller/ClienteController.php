@@ -29,6 +29,15 @@ class ClienteController
         exit;
     }
 
+    /** Devuelve (y borra) los datos de un formulario guardados en la sesión tras un error. */
+    private function tomarFormulario(string $clave): array
+    {
+        $datos = $_SESSION[$clave] ?? [];
+        unset($_SESSION[$clave]);
+
+        return is_array($datos) ? $datos : [];
+    }
+
     private function servicio(): ClienteService
     {
         return new ClienteService(new ClienteModel());
@@ -57,6 +66,7 @@ class ClienteController
     {
         $clienteModel = new ClienteModel();
         $tipos = $clienteModel->getTiposCliente();
+        $datosPrevios = $this->tomarFormulario('form_cliente');
         require __DIR__ . "/../view/cliente/crear.php";
     }
 
@@ -65,9 +75,9 @@ class ClienteController
         $error = $this->servicio()->crear($_POST);
 
         if ($error !== null) {
-            // Se devuelven los datos al formulario para no perder lo escrito.
-            $datos = ClienteValidator::normalizar($_POST);
-            $this->redirigir("cliente/crear&" . http_build_query(['error' => $error] + $datos));
+            // Lo escrito se guarda en la sesión (no en la URL) para no perderlo.
+            $_SESSION['form_cliente'] = ClienteValidator::normalizar($_POST);
+            $this->redirigir("cliente/crear&error=$error");
         }
 
         $this->redirigir("cliente/index&ok=creado");
@@ -83,6 +93,8 @@ class ClienteController
         }
 
         $tipos = $clienteModel->getTiposCliente();
+        $previos = $this->tomarFormulario('form_cliente');
+        $datosPrevios = ($previos['id'] ?? null) === (string)$id ? $previos : [];
         $saldo = $clienteModel->getSaldo($id);
         $historial = $clienteModel->getUltimosMovimientos(4, (int)$id);
 
@@ -94,6 +106,7 @@ class ClienteController
         $error = $this->servicio()->actualizar($id, $_POST);
 
         if ($error !== null) {
+            $_SESSION['form_cliente'] = ['id' => (string)$id] + ClienteValidator::normalizar($_POST);
             $this->redirigir("cliente/editar/$id&error=$error");
         }
 

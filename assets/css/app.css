@@ -656,10 +656,11 @@ a { text-decoration: none; }
     ::view-transition-group(mg-barra-movil),
     ::view-transition-group(mg-nav-movil) { animation-duration: 0s; }
 
-    /* Respaldo para navegadores sin View Transitions entre páginas */
-    @supports not (view-transition-name: none) {
-        .mg-contenido, .mg-login-form .caja { animation: mg-vista-entra 180ms cubic-bezier(.2, .7, .3, 1) both; }
-    }
+    /* Entrada del contenido cuando la página llega SIN transición: recarga (F5),
+       URL escrita a mano o navegador sin View Transitions entre páginas.
+       La clase la pone el script del <head> (ver view/layout/header.php). */
+    .mg-entrada .mg-contenido,
+    .mg-entrada .mg-login-form .caja { animation: mg-vista-entra 180ms cubic-bezier(.2, .7, .3, 1) both; }
 
     /* Detalles dentro de la página */
     .dropdown-menu.show { animation: mg-menu-abre 120ms ease-out; }

@@ -262,14 +262,41 @@ final class AppHttpTest extends TestCase
     #[Test]
     public function crear_un_cliente_invalido_no_lo_guarda_y_devuelve_el_error_y_los_datos(): void
     {
+        // Arrange
         $this->entrarComoAdmin();
 
+        // Act
         $r = $this->crearClienteHttp(['telefono' => '300-ABC']);
+        $formulario = self::$app->get(self::URL . 'cliente/crear&error=telefono_invalido');
+        $recarga = self::$app->get(self::URL . 'cliente/crear');
 
+        // Assert: el error va en la URL, pero los datos personales NO (seguridad)
         $this->assertSame(302, $r->estado);
         $this->assertStringContainsString('error=telefono_invalido', $r->redirigeA());
-        $this->assertStringContainsString('nombre=Valentina', $r->redirigeA(), 'Conserva lo escrito.');
+        $this->assertStringNotContainsString('Valentina', $r->redirigeA());
+        $this->assertStringNotContainsString('1065777666', $r->redirigeA());
+
+        // El formulario recupera lo escrito (desde la sesión) una sola vez
+        $this->assertStringContainsString('value="Valentina"', $formulario->cuerpo);
+        $this->assertStringNotContainsString('value="Valentina"', $recarga->cuerpo);
         $this->assertSame(0, (int)$this->bd()->query('SELECT COUNT(*) FROM clientes')->fetchColumn());
+    }
+
+    #[Test]
+    public function crear_un_usuario_invalido_no_expone_los_datos_ni_la_contrasena(): void
+    {
+        $this->entrarComoAdmin();
+
+        $r = self::$app->post(self::URL . 'user/guardar', [
+            'cedula' => '5555', 'nombre' => 'Sofía', 'apellido' => 'Ríos', 'correo' => 'no-es-correo',
+            'usuario' => 'sofia', 'password' => 'Secreta123', 'rol' => 'usuario',
+        ]);
+        $formulario = self::$app->get(self::URL . 'user/crear&error=correo_invalido');
+
+        $this->assertStringContainsString('error=correo_invalido', $r->redirigeA());
+        $this->assertStringNotContainsString('sofia', $r->redirigeA());
+        $this->assertStringContainsString('value="sofia"', $formulario->cuerpo, 'Recupera lo escrito.');
+        $this->assertStringNotContainsString('Secreta123', $formulario->cuerpo, 'Nunca devuelve la contraseña.');
     }
 
     #[Test]

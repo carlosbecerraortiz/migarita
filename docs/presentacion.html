@@ -231,7 +231,7 @@ tr.total td { font-weight: 700; border-bottom: none; }
 
     <div class="notas">
         Presentar al equipo y el objetivo: construir una suite de pruebas automatizadas con apoyo de IA (Claude Code)
-        que alcance al menos 60 % de cobertura. Resultado: 210 pruebas PHPUnit + 3 E2E y 100 % de cobertura en la capa de lógica.
+        que alcance al menos 60 % de cobertura. Resultado: 211 pruebas PHPUnit + 3 E2E y 100 % de cobertura en la capa de lógica.
     </div>
 </section>
 
@@ -279,13 +279,13 @@ tr.total td { font-weight: 700; border-bottom: none; }
 <!-- =============================================================== 3. MAPA DE LA SUITE -->
 <section class="slide">
     <div class="cinta"><span class="num">2</span> Mapa de la suite de pruebas</div>
-    <h1>213 pruebas organizadas en la pirámide</h1>
+    <h1>214 pruebas organizadas en la pirámide</h1>
     <p class="bajada">Muchas pruebas rápidas en la base y pocas pruebas grandes arriba.</p>
 
     <div class="columnas" style="grid-template-columns: 0.9fr 1.1fr">
         <div class="piramide">
             <div class="nivel e2e"><span class="cant">3</span><span class="nom">E2E · Playwright</span></div>
-            <div class="nivel fun"><span class="cant">30</span><span class="nom">Funcionales · HTTP</span></div>
+            <div class="nivel fun"><span class="cant">31</span><span class="nom">Funcionales · HTTP</span></div>
             <div class="nivel int"><span class="cant">40</span><span class="nom">Integración · SQLite</span></div>
             <div class="nivel uni"><span class="cant">140</span><span class="nom">Unitarias · con mocks</span></div>
             <div class="nota-piramide">PHPUnit 11 + Xdebug · Playwright (Chromium)</div>
@@ -296,9 +296,9 @@ tr.total td { font-weight: 700; border-bottom: none; }
                 <tr><td><span class="etq v">Unitaria</span></td><td>Validadores: cédula, teléfono, correo, contraseña ≥ 6, roles, monto &gt; 0, abono ≤ saldo</td><td class="n">74</td></tr>
                 <tr><td><span class="etq v">Unit + mocks</span></td><td>Servicios: movimientos, clientes, permisos, login, correo, informes, panel</td><td class="n">66</td></tr>
                 <tr><td><span class="etq a">Integración</span></td><td>SQL real: saldo = Σ montos, vista de saldos, filtros por fecha, flujo cliente → fiado → abono → eliminar</td><td class="n">40</td></tr>
-                <tr><td><span class="etq m">Funcional</span></td><td>App real por HTTP: códigos <b>200 · 302 · 400 · 403 · 404 · 422</b> y persistencia en la BD</td><td class="n">30</td></tr>
+                <tr><td><span class="etq m">Funcional</span></td><td>App real por HTTP: códigos <b>200 · 302 · 400 · 403 · 404 · 422</b> y persistencia en la BD</td><td class="n">31</td></tr>
                 <tr><td><span class="etq">E2E</span></td><td>Navegador: login, fiado con formato de monto, abono mayor rechazado</td><td class="n">3</td></tr>
-                <tr class="total"><td>Total</td><td></td><td class="n">213</td></tr>
+                <tr class="total"><td>Total</td><td></td><td class="n">214</td></tr>
             </tbody>
         </table>
     </div>
@@ -421,9 +421,9 @@ tr.total td { font-weight: 700; border-bottom: none; }
             <div class="terminal mono">
                 <span class="p">&gt;</span> composer test<br>
                 <span class="c">.....F..F..F......</span><br>
-                <span class="ko">FAILURES!</span> Tests: 210, Failures: 3.<br>
+                <span class="ko">FAILURES!</span> Tests: 211, Failures: 3.<br>
                 <span class="p">&gt;</span> composer test <span class="c"># después de revertir</span><br>
-                <span class="ok">OK (210 tests, 480 assertions)</span>
+                <span class="ok">OK (211 tests, 488 assertions)</span>
             </div>
         </div>
         <table>

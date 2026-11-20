@@ -4,14 +4,9 @@ $seccion = 'clientes';
 $scripts = ['vista-previa.js'];
 require __DIR__ . '/../layout/header.php';
 
-// Si hubo un error, el controlador devuelve lo escrito en la URL para no perderlo
-$datos = [
-    'cedula'          => $_GET['cedula'] ?? '',
-    'nombre'          => $_GET['nombre'] ?? '',
-    'apellido'        => $_GET['apellido'] ?? '',
-    'telefono'        => $_GET['telefono'] ?? '',
-    'correo'          => $_GET['correo'] ?? '',
-    'id_tipo_cliente' => $_GET['id_tipo_cliente'] ?? '',
+// Si hubo un error, lo escrito vuelve desde la sesión (nunca por la URL)
+$datos = ($datosPrevios ?? []) + [
+    'cedula' => '', 'nombre' => '', 'apellido' => '', 'telefono' => '', 'correo' => '', 'id_tipo_cliente' => '',
 ];
 $accion = url('cliente/guardar');
 $textoBoton = 'Registrar cliente';

@@ -3,7 +3,8 @@ $titulo = 'Editar cliente';
 $seccion = 'clientes';
 require __DIR__ . '/../layout/header.php';
 
-$datos = $cliente;
+// Si hubo un error al guardar, se muestra lo que se había escrito (viene de la sesión)
+$datos = ($datosPrevios ?? []) + $cliente;
 $accion = url('cliente/actualizar/' . (int)$cliente['id']);
 $textoBoton = 'Guardar cambios';
 ?>
@@ -16,9 +17,6 @@ $textoBoton = 'Guardar cambios';
             <h1>Editar cliente</h1>
             <p><?= e($cliente['nombre'] . ' ' . $cliente['apellido']) ?></p>
         </div>
-    </div>
-    <div class="acciones">
-        <a href="<?= url('cliente/deuda/' . (int)$cliente['id']) ?>" class="btn btn-claro"><i class="bi bi-plus-lg"></i> Registrar movimiento</a>
     </div>
 </div>
 

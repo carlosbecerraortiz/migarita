@@ -4,13 +4,9 @@ $seccion = 'usuarios';
 $scripts = ['togglePasswordCrear.js', 'vista-previa.js'];
 require __DIR__ . '/../layout/header.php';
 
-$datos = [
-    'cedula'   => $_GET['cedula'] ?? '',
-    'nombre'   => $_GET['nombre'] ?? '',
-    'apellido' => $_GET['apellido'] ?? '',
-    'correo'   => $_GET['correo'] ?? '',
-    'usuario'  => $_GET['usuario'] ?? '',
-    'rol'      => $_GET['rol'] ?? '',
+// Si hubo un error, lo escrito vuelve desde la sesión (nunca por la URL ni la contraseña)
+$datos = ($datosPrevios ?? []) + [
+    'cedula' => '', 'nombre' => '', 'apellido' => '', 'correo' => '', 'usuario' => '', 'rol' => '',
 ];
 $accion = url('user/guardar');
 $esEdicion = false;

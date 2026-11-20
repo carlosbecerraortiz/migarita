@@ -4,7 +4,8 @@ $seccion = 'usuarios';
 $scripts = ['togglePasswordCrear.js', 'vista-previa.js'];
 require __DIR__ . '/../layout/header.php';
 
-$datos = $user;
+// Si hubo un error al guardar, se muestra lo que se había escrito (viene de la sesión)
+$datos = ($datosPrevios ?? []) + $user;
 $accion = url('user/actualizar/' . (int)$user['id']);
 $esEdicion = true;
 $textoBoton = 'Guardar cambios';

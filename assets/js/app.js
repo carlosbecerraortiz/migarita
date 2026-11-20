@@ -64,11 +64,14 @@
             setTimeout(cerrar, 4500);
         });
 
-        // Quitar ?ok=... de la URL para que el aviso no reaparezca al recargar
-        if (window.history.replaceState && /[?&]ok=/.test(location.search)) {
-            const url = new URL(location.href);
-            url.searchParams.delete("ok");
-            history.replaceState(null, "", url);
+        // Una vez mostrada la alerta (éxito o error), dejar la URL limpia: así el
+        // código de la alerta no queda expuesto ni reaparece al recargar o compartir.
+        const PARAMETROS_ALERTA = ["ok", "error", "monto"];
+        const url = new URL(location.href);
+        if (window.history.replaceState && PARAMETROS_ALERTA.some(p => url.searchParams.has(p))) {
+            PARAMETROS_ALERTA.forEach(p => url.searchParams.delete(p));
+            // Se conserva "url=cliente/index" legible (sin %2F)
+            history.replaceState(history.state, "", url.pathname + "?" + url.searchParams.toString().replace(/%2F/gi, "/"));
         }
 
         // Enlaces que piden confirmación: <a data-confirmar="texto" href="...">

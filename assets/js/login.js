@@ -16,6 +16,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Dejar la URL limpia después de mostrar el error de inicio de sesión
+    if (window.history.replaceState && new URLSearchParams(location.search).has("error")) {
+        history.replaceState(history.state, "", "/mi_garita/index.php?url=login/index");
+    }
+
     // Validación de campos vacíos antes de enviar
     document.querySelectorAll(".needs-validation").forEach(form => {
         form.addEventListener("submit", e => {

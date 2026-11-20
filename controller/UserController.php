@@ -51,7 +51,28 @@ class UserController
             $this->redirigir("user/index&error=sin_permisos");
         }
 
+        $datosPrevios = $this->tomarFormulario('form_usuario');
+        unset($datosPrevios['id']);
+
         require __DIR__ . "/../view/user/crear.php";
+    }
+
+    /** Datos del formulario de usuario listos para guardar en la sesión: nunca la contraseña. */
+    private function datosSinClave(array $input): array
+    {
+        $datos = UsuarioValidator::normalizar($input);
+        unset($datos['password']);
+
+        return $datos;
+    }
+
+    /** Devuelve (y borra) los datos de un formulario guardados en la sesión tras un error. */
+    private function tomarFormulario(string $clave): array
+    {
+        $datos = $_SESSION[$clave] ?? [];
+        unset($_SESSION[$clave]);
+
+        return is_array($datos) ? $datos : [];
     }
 
     public function guardar()
@@ -63,11 +84,9 @@ class UserController
         }
 
         if ($error !== null) {
-            // Se devuelven los datos (sin la contraseña) para no perder lo escrito.
-            $datos = UsuarioValidator::normalizar($_POST);
-            unset($datos['password']);
-            $datos += ['rol' => ''];
-            $this->redirigir("user/crear&" . http_build_query(['error' => $error] + $datos));
+            // Lo escrito (sin la contraseña) se guarda en la sesión, no en la URL.
+            $_SESSION['form_usuario'] = $this->datosSinClave($_POST);
+            $this->redirigir("user/crear&error=$error");
         }
 
         $this->redirigir("user/index&ok=creado");
@@ -82,6 +101,13 @@ class UserController
         $userModel = new UserModel();
         $user = $userModel->getById($id);
 
+        if (!$user) {
+            $this->redirigir("user/index");
+        }
+
+        $previos = $this->tomarFormulario('form_usuario');
+        $datosPrevios = ($previos['id'] ?? null) === (string)$id ? $previos : [];
+
         require __DIR__ . "/../view/user/editar.php";
     }
 
@@ -94,6 +120,7 @@ class UserController
         }
 
         if ($error !== null) {
+            $_SESSION['form_usuario'] = ['id' => (string)$id] + $this->datosSinClave($_POST);
             $this->redirigir("user/editar/$id&error=$error");
         }
 

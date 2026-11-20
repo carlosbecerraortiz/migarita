@@ -29,8 +29,9 @@ test('login con contraseña incorrecta muestra el error', async ({ page }) => {
   await page.locator('#yourPassword').fill('incorrecta');
   await page.getByRole('button', { name: 'Iniciar Sesión' }).click();
 
-  await expect(page).toHaveURL(/error=contrasena/);
   await expect(page.getByRole('alert')).toContainText('La contraseña no es correcta');
+  // Seguridad: tras mostrar la alerta, el código de error no queda en la URL
+  await expect(page).toHaveURL(/url=login\/index$/);
 });
 
 test('registrar un fiado actualiza el saldo del cliente', async ({ page }) => {
@@ -71,7 +72,7 @@ test('un abono mayor que la deuda es rechazado', async ({ page }) => {
   await page.getByRole('button', { name: 'Registrar' }).click();
 
   // Assert: el servidor lo rechaza y el saldo no cambió
-  await expect(page).toHaveURL(/error=abono_mayor/);
   await expect(page.getByRole('alert')).toContainText('no puede ser mayor');
+  await expect(page).toHaveURL(/url=cliente\/deuda\/1$/); // URL limpia, sin "error=..."
   await expect(page.locator('#saldoActual')).toHaveText('$ 15.000');
 });
