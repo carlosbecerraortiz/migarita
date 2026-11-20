@@ -1,24 +1,33 @@
-document.addEventListener("DOMContentLoaded", function () {
+/* MiGarita · selección del tipo de informe */
+document.addEventListener("DOMContentLoaded", () => {
+    "use strict";
 
-    const selector = document.getElementById("tipoInforme");
-    if (!selector) return;
+    const form = document.getElementById("formInforme");
+    if (!form) return;
 
-    selector.addEventListener("change", function() {
-        let opcion = this.value;
+    const bloque = document.getElementById("bloqueFechas");
+    const desde = document.getElementById("desde");
+    const hasta = document.getElementById("hasta");
 
-        document.getElementById("bloqueMes").classList.add("oculto");
-        document.getElementById("bloqueFechas").classList.add("oculto");
-        document.getElementById("bloqueCompleto").classList.add("oculto");
+    function actualizar() {
+        const porFechas = form.querySelector("input[name='tipo']:checked")?.value === "fechas";
+        bloque.hidden = !porFechas;
+        // Los campos deshabilitados no se envían, así solo viajan cuando se usan
+        desde.disabled = !porFechas;
+        hasta.disabled = !porFechas;
+    }
 
-        if (opcion === "mes") {
-            document.getElementById("bloqueMes").classList.remove("oculto");
-        }
-        else if (opcion === "fechas") {
-            document.getElementById("bloqueFechas").classList.remove("oculto");
-        }
-        else if (opcion === "completo") {
-            document.getElementById("bloqueCompleto").classList.remove("oculto");
+    form.querySelectorAll("input[name='tipo']").forEach(r => r.addEventListener("change", actualizar));
+
+    // "Hasta" no puede ser anterior a "Desde"
+    desde.addEventListener("change", () => { hasta.min = desde.value; });
+
+    form.addEventListener("submit", e => {
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            form.reportValidity();
         }
     });
 
+    actualizar();
 });

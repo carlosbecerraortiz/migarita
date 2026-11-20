@@ -1,342 +1,135 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+<?php
+$titulo = 'Clientes';
+$seccion = 'clientes';
+$scripts = ['clientes.js'];
+$avisos = [
+    'creado'     => 'Cliente registrado correctamente.',
+    'editado'    => 'Cliente actualizado correctamente.',
+    'eliminado'  => 'Cliente eliminado.',
+    'movimiento' => 'Movimiento registrado correctamente.',
+];
+require __DIR__ . '/../layout/header.php';
 
-  <title>MiGarita - Clientes</title>
+$conDeuda = count(array_filter($clientes, fn($c) => (float)$c['saldo'] > 0));
+$alDia = count($clientes) - $conDeuda;
+?>
 
-  <!-- Favicons -->
-  <link href="/mi_garita/assets/img/favicon1.png" rel="icon">
-  <link href="/mi_garita/assets/img/apple-touch-icon1.png" rel="apple-touch-icon">
+<div class="mg-encabezado">
+    <div>
+        <h1>Clientes</h1>
+        <p>Busca un cliente para registrar un fiado o un abono.</p>
+    </div>
+    <div class="acciones">
+        <a href="<?= url('cliente/crear') ?>" class="btn btn-primary"><i class="bi bi-person-plus"></i> Nuevo cliente</a>
+    </div>
+</div>
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.gstatic.com" rel="preconnect">
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700|Poppins:300,400,500,600,700" rel="stylesheet">
+<section class="mg-kpis tres" aria-label="Resumen">
+    <div class="mg-tarjeta mg-kpi destacado">
+        <div class="etiqueta"><i class="bi bi-wallet2"></i> Total adeudado</div>
+        <div class="valor"><?= dinero($totalGeneral) ?></div>
+    </div>
+    <div class="mg-tarjeta mg-kpi">
+        <div class="etiqueta"><i class="bi bi-exclamation-circle deuda"></i> Con deuda</div>
+        <div class="valor"><?= $conDeuda ?></div>
+    </div>
+    <div class="mg-tarjeta mg-kpi">
+        <div class="etiqueta"><i class="bi bi-check2-circle"></i> Al día</div>
+        <div class="valor"><?= $alDia ?></div>
+    </div>
+</section>
 
-  <!-- Vendor CSS -->
-  <link href="/mi_garita/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="/mi_garita/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="/mi_garita/assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
-
-  <!-- Main CSS -->
-  <link href="/mi_garita/assets/css/style.css" rel="stylesheet">
-</head>
-<body>
-  <?php require __DIR__ . "/../layout/header.php"; ?>
-  <?php require __DIR__ . "/../layout/sidebar.php"; ?>
-  <!-- ======= Main ======= -->
-  <main id="main" class="main">
-
-    <div class="pagetitle">
-      <h1>Clientes</h1>
+<section class="mg-tarjeta">
+    <div class="mg-barra-filtros">
+        <label class="mg-buscador mb-0">
+            <span class="visually-hidden">Buscar cliente</span>
+            <i class="bi bi-search"></i>
+            <input type="search" id="buscador" class="form-control" autocomplete="off"
+                   placeholder="Buscar por nombre, apellido o cédula" value="<?= e($_GET['buscar'] ?? '') ?>">
+        </label>
+        <div class="mg-filtros" role="group" aria-label="Filtrar por estado">
+            <button type="button" class="mg-filtro activo" data-filtro="todos">Todos <span class="cuenta" data-cuenta="todos"><?= count($clientes) ?></span></button>
+            <button type="button" class="mg-filtro" data-filtro="deuda">Con deuda <span class="cuenta" data-cuenta="deuda"><?= $conDeuda ?></span></button>
+            <button type="button" class="mg-filtro" data-filtro="aldia">Al día <span class="cuenta" data-cuenta="aldia"><?= $alDia ?></span></button>
+        </div>
     </div>
 
-    <section class="section">
-      <div class="card">
-        <div class="card-body">
+    <table class="mg-tabla">
+        <thead>
+            <tr>
+                <th>Cliente</th>
+                <th>Tipo</th>
+                <th class="derecha">Saldo</th>
+                <th class="derecha"><span class="visually-hidden">Acciones</span></th>
+            </tr>
+        </thead>
+        <tbody id="tablaClientes">
+            <?php foreach ($clientes as $c):
+                $saldo = (float)$c['saldo'];
+                $debe = $saldo > 0;
+                $nombre = $c['nombre'] . ' ' . $c['apellido'];
+            ?>
+                <tr data-saldo="<?= $saldo ?>">
+                    <td class="col-persona">
+                        <div class="mg-persona">
+                            <span class="mg-avatar"><?= e(iniciales($c['nombre'], $c['apellido'])) ?></span>
+                            <div class="datos">
+                                <a class="nombre d-block text-reset" href="<?= url('cliente/deuda/' . (int)$c['id']) ?>"><?= e($nombre) ?></a>
+                                <div class="sub">CC <?= e($c['cedula']) ?><?= $c['telefono'] ? ' · ' . e($c['telefono']) : '' ?></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="col-tipo">
+                        <span class="mg-etiqueta <?= clase_tipo($c['tipo_cliente']) ?>"><?= e(ucfirst($c['tipo_cliente'] ?? '')) ?></span>
+                    </td>
+                    <td class="col-saldo derecha">
+                        <span class="mg-saldo <?= $debe ? 'debe' : 'al-dia' ?>"><?= dinero($saldo) ?></span>
+                        <span class="mg-estado"><?= $debe ? 'Debe' : 'Al día' ?></span>
+                    </td>
+                    <td class="col-acciones">
+                        <div class="acciones">
+                            <a href="<?= url('cliente/deuda/' . (int)$c['id']) ?>" class="btn btn-sm btn-suave">
+                                <i class="bi bi-plus-lg"></i> Movimiento
+                            </a>
+                            <div class="dropdown">
+                                <button class="btn btn-icono" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Más acciones para <?= e($nombre) ?>">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="<?= url('cliente/editar/' . (int)$c['id']) ?>"><i class="bi bi-pencil"></i> Editar datos</a></li>
+                                    <li><a class="dropdown-item" href="<?= url('cliente/seleccionarInforme/' . (int)$c['id']) ?>"><i class="bi bi-file-earmark-pdf"></i> Generar informe</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item peligro" href="<?= url('cliente/eliminar/' . (int)$c['id']) ?>"
+                                           data-titulo="¿Eliminar cliente?"
+                                           data-confirmar="Se eliminará a <?= e($nombre) ?> y todo su historial. Esta acción no se puede deshacer.">
+                                            <i class="bi bi-trash3"></i> Eliminar
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+            <tr class="vacio" <?= $clientes ? 'hidden' : '' ?>>
+                <td colspan="4"><i class="bi bi-search d-block fs-3 mb-2"></i>No se encontraron clientes.</td>
+            </tr>
+        </tbody>
+    </table>
 
-          <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
-            <h5 class="card-title">Lista de clientes</h5>
-            <a href="/mi_garita/index.php?url=cliente/crear" class="btn btn-outline-success">Añadir Cliente</a>
-          </div>
-
-          <div class="mb-3">
-              <div class="input-group" style="max-width: 350px;">
-                  <input type="text" 
-                         id="buscador" 
-                         class="form-control" 
-                         placeholder="Buscar por nombre, apellido o cédula...">
-
-                  <span class="input-group-text bg-primary text-white">
-                      <i class="bi bi-search"></i>
-                  </span>
-              </div>
-          </div>
-          <!-- CONTENEDOR CON SCROLL PARA LA TABLA -->
-          <div class="tabla-scroll">
-            <!-- TABLA DINÁMICA -->
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Cédula</th>
-                    <th>Nombre</th>
-                    <th>Apellido</th>
-                    <th>Teléfono</th>
-                    <th>Tipo</th>
-                    <th>Saldo</th>
-                    <th>Acciones</th>
-                    <th>Movimientos</th>
-                  </tr>
-                </thead>
-
-                <tbody id="tablaClientes">
-                  <?php foreach ($clientes as $c): ?>
-                    <tr>
-                      <td><?= $c['id'] ?></td>
-                        <td><?= $c['cedula'] ?></td>
-                        <td><?= $c['nombre'] ?></td>
-                        <td><?= $c['apellido'] ?></td>
-                        <td><?= $c['telefono'] ?></td>
-                        <td>
-                            <?php
-                            // Definir color según el tipo de cliente
-                            $colorBadge = 'bg-secondary'; // Color por defecto
-                            
-                            switch(strtolower($c['tipo_cliente'])) {
-                                case 'estudiante':
-                                    $colorBadge = 'bg-primary'; // Azul
-                                    break;
-                                case 'administrativo':
-                                    $colorBadge = 'bg-success'; // Verde
-                                    break;
-                                case 'profesor':
-                                    $colorBadge = 'bg-warning'; // Amarillo
-                                    break;
-                                case 'egresado':
-                                    $colorBadge = 'bg-info'; // Celeste
-                                    break;
-                                case 'externo':
-                                    $colorBadge = 'bg-danger'; // Rojo
-                                    break;
-                            }
-                            ?>
-                            <span class="badge <?= $colorBadge ?>">
-                                <?= ucfirst($c['tipo_cliente']) ?>
-                            </span>
-                        </td>
-                        <td>$ <?= number_format($c['saldo'], 0, ',', '.') ?></td>
-
-                        <td>
-                        <!-- EDITAR -->
-                          <a href="/mi_garita/index.php?url=cliente/editar/<?= $c['id'] ?>" 
-                            class="btn btn-sm btn-primary" title="Editar">
-                            <i class="bi bi-pencil-square"></i>
-                          </a>
-
-                        <!-- ELIMINAR -->
-                        <button 
-                          class="btn btn-sm btn-danger btnEliminar"
-                          data-id="<?= $c['id'] ?>"
-                          data-nombre="<?= $c['nombre'] . ' ' . $c['apellido'] ?>" title="Eliminar">
-                          <i class="bi bi-trash"></i>
-                        </button>
-
-                        <!-- REPORTE -->
-                          <a href="/mi_garita/index.php?url=cliente/seleccionarInforme/<?= $c['id'] ?>" 
-                              class="btn btn-sm btn-success" title="Generar Informe">
-                              <i class="bi bi-file-earmark-text"></i>
-                          </a>
-                                    
-                        </td>
-                        <td>
-                          <a href="/mi_garita/index.php?url=cliente/deuda/<?= $c['id'] ?>" 
-                            class="btn btn-outline-success btn-sm">
-                            Registrar Movimiento
-                          </a>
-                        </td>
-                    </tr>
-                  <?php endforeach; ?>
-                </tbody>
-              </table>
-              <!-- Fin tabla dinamica -->
-          </div>
-          <div class="mt-3 text-end">
-            <h5>
-                Total General Adeudado:
-                <span class="badge bg-success" style="font-size: 1.1rem;">
-                  $ <?= number_format($totalGeneral, 0, ',', '.') ?>
-              </span>
-            </h5>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-  <!-- End Main -->
-
-  <!-- Modal de éxito -->
-  <div class="modal fade" id="modalExito" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-
-        <div class="modal-header bg-success text-white">
-          <h5 class="modal-title">Éxito</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-
-        <div class="modal-body text-center">
-          <p class="mb-0">Cliente registrado correctamente.</p>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-success" data-bs-dismiss="modal">Aceptar</button>
-        </div>
-
-      </div>
+    <div class="mg-pie-tabla">
+        <span id="resumenLista"><?= count($clientes) ?> clientes</span>
+        <span>Saldo total: <b class="text-body num"><?= dinero($totalGeneral) ?></b></span>
     </div>
-  </div>
+</section>
 
-  <?php if (isset($_GET['ok']) && $_GET['ok'] === "creado"): ?>
-    <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        var myModal = new bootstrap.Modal(document.getElementById('modalExito'));
-        myModal.show();
-    });
-    </script>
-  <?php endif; ?>
+<?php if (($_GET['error'] ?? '') === 'saldo'): ?>
+    <div hidden id="errorEliminar"
+         data-titulo="No se puede eliminar"
+         data-texto="Este cliente tiene un saldo pendiente de <?= e(dinero($_GET['monto'] ?? 0)) ?>. Registra el abono completo antes de eliminarlo."></div>
+<?php elseif (($_GET['error'] ?? '') === 'notfound'): ?>
+    <div hidden id="errorEliminar" data-titulo="Cliente no encontrado" data-texto="El cliente que buscas no existe o ya fue eliminado."></div>
+<?php endif; ?>
 
-  <!-- Modal de éxito al actualizar -->
-  <div class="modal fade" id="modalActualizado" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-
-        <div class="modal-header bg-success text-white">
-          <h5 class="modal-title">Éxito</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-
-        <div class="modal-body text-center">
-          <p class="mb-0">El cliente ha sido actualizado correctamente.</p>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-success" data-bs-dismiss="modal">Aceptar</button>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <?php if (isset($_GET['ok']) && $_GET['ok'] === "editado"): ?>
-  <script>
-  document.addEventListener("DOMContentLoaded", function() {
-      var myModal = new bootstrap.Modal(document.getElementById('modalActualizado'));
-      myModal.show();
-  });
-  </script>
-  <?php endif; ?>
-
-  <!-- Modal Confirmacion Eliminar -->
-  <div class="modal fade" id="modalConfirmarEliminar" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-
-        <div class="modal-header bg-danger text-white">
-          <h5 class="modal-title">Confirmar eliminación</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-
-        <div class="modal-body text-center">
-          <p id="textoConfirmacion"></p>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-danger" id="btnEliminarConfirmado">Eliminar</button>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- Script de confirmación -->
-  <script>
-  let idEliminar = null;
-
-  // Abrir modal al dar clic en botón rojo
-  document.querySelectorAll(".btnEliminar").forEach(boton => {
-      boton.addEventListener("click", () => {
-
-          idEliminar = boton.dataset.id;
-          let nombre = boton.dataset.nombre;
-
-          document.getElementById("textoConfirmacion").innerHTML =
-              `¿Estás seguro que deseas eliminar al cliente <b>${nombre}</b>?`;
-
-          new bootstrap.Modal(document.getElementById('modalConfirmarEliminar')).show();
-      });
-  });
-
-  // Al confirmar eliminación
-  document.getElementById("btnEliminarConfirmado").addEventListener("click", () => {
-      if (idEliminar) {
-          window.location.href = "/mi_garita/index.php?url=cliente/eliminar/" + idEliminar;
-      }
-  });
-  </script>
-
-  <!-- Modal Exito Eliminar -->
-  <div class="modal fade" id="modalExitoEliminar" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-
-        <div class="modal-header bg-success text-white">
-          <h5 class="modal-title">Cliente eliminado</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-
-        <div class="modal-body text-center">
-          <p>El cliente ha sido eliminado correctamente.</p>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-success" data-bs-dismiss="modal">Aceptar</button>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- Mostrar modal si viene "ok=eliminado" -->
-  <?php if (isset($_GET['ok']) && $_GET['ok'] === "eliminado"): ?>
-  <script>
-  document.addEventListener("DOMContentLoaded", function() {
-      new bootstrap.Modal(document.getElementById('modalExitoEliminar')).show();
-  });
-  </script>
-  <?php endif; ?>
-
-  <!-- Modal Error Eliminar -->
-  <div class="modal fade" id="modalErrorEliminar" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-
-        <div class="modal-header bg-warning text-dark">
-          <h5 class="modal-title">No se puede eliminar</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-
-        <div class="modal-body text-center">
-          <p id="textoError"></p>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Aceptar</button>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- Mostrar error si viene "error=saldo" -->
-  <?php if (isset($_GET['error']) && $_GET['error'] === "saldo"): ?>
-  <script>
-  document.addEventListener("DOMContentLoaded", function() {
-
-      const saldo = "<?= $_GET['monto'] ?? '0' ?>";
-
-      document.getElementById("textoError").innerHTML =
-          `Este cliente no se puede eliminar porque tiene un saldo pendiente de <b>$ ${saldo}</b>.`;
-
-      new bootstrap.Modal(document.getElementById('modalErrorEliminar')).show();
-  });
-  </script>
-  <?php endif; ?>
-
-
-  <?php require __DIR__ . "/../layout/footer.php"; ?>
-  <script src="/mi_garita/assets/js/buscadorClientes.js?v=<?= time() ?>"></script>
-</body>
-</html>
+<?php require __DIR__ . '/../layout/footer.php'; ?>

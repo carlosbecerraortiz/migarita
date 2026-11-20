@@ -42,7 +42,7 @@ class ClienteController
         $buscar = $_GET['buscar'] ?? '';
 
         if ($buscar !== '') {
-            $clientes = $clienteModel->buscar($buscar);
+            $clientes = $clienteModel->buscarConSaldo($buscar);
         } else {
             $clientes = $clienteModel->getAllConSaldo();
         }
@@ -129,6 +129,9 @@ class ClienteController
         if (!$cliente) {
             $this->redirigir("cliente/index&error=notfound");
         }
+
+        $saldo = $clienteModel->getSaldo($id);
+        $historial = $clienteModel->getUltimosMovimientos(6, (int)$id);
 
         require __DIR__ . "/../view/cliente/deuda.php";
     }

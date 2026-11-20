@@ -230,4 +230,77 @@ final class ClienteModelTest extends TestCase
         $this->assertSame(['administrativo', 'egresado', 'estudiante', 'externo', 'profesor'], $tipos);
         $this->assertSame(['efectivo', 'transferencia'], $metodos);
     }
+
+    #[Test]
+    public function los_ultimos_movimientos_salen_del_mas_reciente_al_mas_antiguo(): void
+    {
+        // Arrange
+        $laura = BaseDatosPrueba::crearCliente($this->pdo, ['cedula' => '1', 'nombre' => 'Laura']);
+        $pedro = BaseDatosPrueba::crearCliente($this->pdo, ['cedula' => '2', 'nombre' => 'Pedro']);
+        BaseDatosPrueba::crearMovimiento($this->pdo, $laura, 1000, '2026-11-01 08:00:00');
+        BaseDatosPrueba::crearMovimiento($this->pdo, $pedro, 2000, '2026-11-03 08:00:00');
+        BaseDatosPrueba::crearMovimiento($this->pdo, $laura, -500, '2026-11-02 08:00:00', 2);
+
+        // Act
+        $ultimos = $this->modelo->getUltimosMovimientos(2);
+
+        // Assert: solo 2, ordenados por fecha descendente, con datos del cliente y del método
+        $this->assertSame([2000.0, -500.0], array_map(fn($m) => (float)$m['monto'], $ultimos));
+        $this->assertSame('Pedro', $ultimos[0]['cliente_nombre']);
+        $this->assertSame('transferencia', $ultimos[1]['metodo_pago']);
+        $this->assertSame('Ana', $ultimos[0]['usuario_nombre']);
+    }
+
+    #[Test]
+    public function los_ultimos_movimientos_se_pueden_filtrar_por_cliente(): void
+    {
+        $laura = BaseDatosPrueba::crearCliente($this->pdo, ['cedula' => '1']);
+        $pedro = BaseDatosPrueba::crearCliente($this->pdo, ['cedula' => '2']);
+        BaseDatosPrueba::crearMovimiento($this->pdo, $laura, 1000);
+        BaseDatosPrueba::crearMovimiento($this->pdo, $pedro, 2000);
+
+        $deLaura = $this->modelo->getUltimosMovimientos(10, $laura);
+
+        $this->assertCount(1, $deLaura);
+        $this->assertEquals($laura, $deLaura[0]['id_cliente']);
+    }
+
+    #[Test]
+    public function un_limite_menor_que_uno_devuelve_al_menos_un_movimiento(): void
+    {
+        $id = BaseDatosPrueba::crearCliente($this->pdo);
+        BaseDatosPrueba::crearMovimiento($this->pdo, $id, 1000);
+        BaseDatosPrueba::crearMovimiento($this->pdo, $id, 2000);
+
+        $this->assertCount(1, $this->modelo->getUltimosMovimientos(0));
+    }
+
+    #[Test]
+    public function los_totales_del_dia_separan_lo_fiado_de_lo_abonado(): void
+    {
+        // Arrange: hoy se fió 7.000 y se abonó 2.500; ayer hubo otro fiado que no cuenta
+        $id = BaseDatosPrueba::crearCliente($this->pdo);
+        BaseDatosPrueba::crearMovimiento($this->pdo, $id, 4000, '2026-11-20 08:00:00');
+        BaseDatosPrueba::crearMovimiento($this->pdo, $id, 3000, '2026-11-20 23:59:59');
+        BaseDatosPrueba::crearMovimiento($this->pdo, $id, -2500, '2026-11-20 12:00:00', 1);
+        BaseDatosPrueba::crearMovimiento($this->pdo, $id, 9999, '2026-11-19 23:59:59');
+
+        // Act
+        $t = $this->modelo->getTotalesMovimientos('2026-11-20', '2026-11-20');
+
+        // Assert
+        $this->assertEquals(7000, $t['fiado']);
+        $this->assertEquals(2500, $t['abonado']);
+        $this->assertEquals(3, $t['cantidad']);
+    }
+
+    #[Test]
+    public function un_dia_sin_movimientos_tiene_totales_en_cero(): void
+    {
+        $t = $this->modelo->getTotalesMovimientos('2026-01-01', '2026-01-01');
+
+        $this->assertEquals(0, $t['fiado']);
+        $this->assertEquals(0, $t['abonado']);
+        $this->assertEquals(0, $t['cantidad']);
+    }
 }

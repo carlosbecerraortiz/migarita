@@ -102,17 +102,84 @@ final class AppHttpTest extends TestCase
     }
 
     #[Test]
-    public function login_correcto_entra_a_la_lista_de_clientes(): void
+    public function login_correcto_entra_al_panel_de_inicio(): void
     {
         // Act
         $login = self::$app->iniciarSesionComo('admin', BaseDatosPrueba::PASSWORD_ADMIN);
-        $lista = self::$app->get(self::URL . 'cliente/index');
+        $panel = self::$app->get(self::URL . 'inicio/index');
 
         // Assert
         $this->assertSame(302, $login->estado);
-        $this->assertStringContainsString('url=cliente/index', $login->redirigeA());
-        $this->assertSame(200, $lista->estado);
-        $this->assertStringContainsString('Ana', $lista->cuerpo, 'Muestra el nombre del usuario en sesión.');
+        $this->assertStringContainsString('url=inicio/index', $login->redirigeA());
+        $this->assertSame(200, $panel->estado);
+        $this->assertStringContainsString('Ana', $panel->cuerpo, 'Muestra el nombre del usuario en sesión.');
+    }
+
+    #[Test]
+    public function con_sesion_iniciada_la_pagina_de_login_redirige_al_panel(): void
+    {
+        $this->entrarComoAdmin();
+
+        $r = self::$app->get('/mi_garita/');
+
+        $this->assertSame(302, $r->estado);
+        $this->assertStringContainsString('url=inicio/index', $r->redirigeA());
+    }
+
+    #[Test]
+    public function sin_sesion_el_panel_redirige_al_login(): void
+    {
+        $r = self::$app->get(self::URL . 'inicio/index');
+
+        $this->assertSame(302, $r->estado);
+        $this->assertStringContainsString('url=login/index', $r->redirigeA());
+    }
+
+    #[Test]
+    public function el_panel_muestra_el_total_adeudado_y_los_movimientos_de_hoy(): void
+    {
+        // Arrange: Laura debe 9.000 (fió 12.000 y abonó 3.000 hoy)
+        $this->entrarComoAdmin();
+        $id = BaseDatosPrueba::crearCliente($this->bd(), ['nombre' => 'Laura']);
+        BaseDatosPrueba::crearMovimiento($this->bd(), $id, 12000);
+        BaseDatosPrueba::crearMovimiento($this->bd(), $id, -3000, null, 1);
+
+        // Act
+        $r = self::$app->get(self::URL . 'inicio/index');
+
+        // Assert
+        $this->assertSame(200, $r->estado);
+        $this->assertStringContainsString('$ 9.000', $r->cuerpo, 'Total adeudado');
+        $this->assertStringContainsString('$ 12.000', $r->cuerpo, 'Fiado hoy');
+        $this->assertStringContainsString('$ 3.000', $r->cuerpo, 'Abonado hoy');
+        $this->assertStringContainsString('Laura', $r->cuerpo, 'Aparece en últimos movimientos y mayores deudores');
+    }
+
+    #[Test]
+    public function la_pagina_de_movimiento_muestra_el_saldo_actual_del_cliente(): void
+    {
+        $this->entrarComoAdmin();
+        $id = BaseDatosPrueba::crearCliente($this->bd(), ['nombre' => 'Laura']);
+        BaseDatosPrueba::crearMovimiento($this->bd(), $id, 4500);
+
+        $r = self::$app->get(self::URL . "cliente/deuda/$id");
+
+        $this->assertSame(200, $r->estado);
+        $this->assertStringContainsString('data-saldo="4500"', $r->cuerpo);
+        $this->assertStringContainsString('$ 4.500', $r->cuerpo);
+    }
+
+    #[Test]
+    public function los_nombres_se_escapan_para_evitar_inyeccion_de_html(): void
+    {
+        // Un nombre con HTML guardado directo en la BD no debe ejecutarse en la página
+        $this->entrarComoAdmin();
+        BaseDatosPrueba::crearCliente($this->bd(), ['nombre' => '<script>alert(1)</script>']);
+
+        $r = self::$app->get(self::URL . 'cliente/index');
+
+        $this->assertStringNotContainsString('<script>alert(1)</script>', $r->cuerpo);
+        $this->assertStringContainsString('&lt;script&gt;', $r->cuerpo);
     }
 
     // ---------------------------------------------------------------- Rutas

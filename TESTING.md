@@ -5,8 +5,8 @@ Suite de pruebas automatizadas del Proyecto Integrador **MiGarita** (Ingeniería
 | Resumen | |
 |---|---|
 | Herramientas | PHPUnit 11.5 + Xdebug (cobertura) · Playwright (E2E) |
-| Total | **192 pruebas PHPUnit** (134 unitarias · 35 integración · 23 funcionales) + **3 E2E** |
-| Cobertura de líneas (capa de lógica) | **100 %** (507 de 507 líneas) — umbral mínimo exigido: 60 % |
+| Total | **208 pruebas PHPUnit** (140 unitarias · 40 integración · 28 funcionales) + **3 E2E** |
+| Cobertura de líneas (capa de lógica) | **100 %** (552 de 552 líneas) — umbral mínimo exigido: 60 % |
 | Prueba de fuego | 5 de 5 reglas de negocio saboteadas fueron detectadas (ver sección 6) |
 
 ---
@@ -71,9 +71,9 @@ Playwright levanta la app solo ([tests/E2E/servidor-e2e.php](tests/E2E/servidor-
 
 ```
                  ▲   E2E (Playwright)          3   flujo crítico en navegador real
-                ▲▲▲  Funcionales (HTTP)       23   app real + BD de prueba + códigos HTTP
-              ▲▲▲▲▲  Integración              35   modelos, conexión y casos de uso con SQLite
-          ▲▲▲▲▲▲▲▲▲  Unitarias (+ mocks)     134   validadores y servicios aislados
+                ▲▲▲  Funcionales (HTTP)       28   app real + BD de prueba + códigos HTTP
+              ▲▲▲▲▲  Integración              40   modelos, conexión y casos de uso con SQLite
+          ▲▲▲▲▲▲▲▲▲  Unitarias (+ mocks)     140   validadores y servicios aislados
 ```
 
 | Nivel | Archivo | Pruebas | Qué protege |
@@ -86,12 +86,13 @@ Playwright levanta la app solo ([tests/E2E/servidor-e2e.php](tests/E2E/servidor-
 | Unitaria + **mocks** | `tests/Unit/Services/UsuarioServiceTest.php` | 15 | Permisos por rol, no quitarse el rol, no auto-eliminarse |
 | Unitaria + **mocks** | `tests/Unit/Services/AuthServiceTest.php` | 13 | Login, registro en bitácora (spy), detección del sistema operativo |
 | Unitaria + **mocks** | `tests/Unit/Services/EmailServiceTest.php` | 6 | Correo al cliente con PHPMailer simulado, fallo de SMTP |
+| Unitaria + **mocks** | `tests/Unit/Services/PanelServiceTest.php` | 6 | Panel de inicio: total adeudado, deudores ordenados, totales del día |
 | Unitaria | `tests/Unit/Services/InformeServiceTest.php` | 8 | Rangos de fechas de los informes PDF (fecha "hoy" inyectada) |
-| Integración | `tests/Integration/ClienteModelTest.php` | 15 | SQL real: saldo = Σ montos, vista `vista_saldos`, filtros por fecha, cascada |
+| Integración | `tests/Integration/ClienteModelTest.php` | 20 | SQL real: saldo = Σ montos, vista `vista_saldos`, filtros por fecha, cascada, últimos movimientos y totales del día |
 | Integración | `tests/Integration/UserModelTest.php` | 9 | Usuarios, restricciones UNIQUE/CHECK, bitácora |
 | Integración | `tests/Integration/CasosDeUsoTest.php` | 7 | Flujo completo: crear cliente → fiar → abonar → saldar → eliminar |
 | Integración | `tests/Integration/DatabaseTest.php` | 4 | Conexión inyectada, BD de prueba por variable de entorno, error claro si MySQL está apagado |
-| Funcional | `tests/Functional/AppHttpTest.php` | 23 | Login, rutas, clientes, movimientos, permisos; HTTP 200/302/400/403/404/422 + persistencia |
+| Funcional | `tests/Functional/AppHttpTest.php` | 28 | Login, panel de inicio, rutas, clientes, movimientos, permisos; HTTP 200/302/400/403/404/422 + persistencia |
 | E2E | `tests/E2E/flujo-fiado.spec.js` | 3 | Login, fiado con formato de monto en vivo, abono mayor rechazado |
 
 ## 4. Design for Testability (refactorización)
@@ -162,11 +163,11 @@ Cada regla se rompió a propósito en el código de producción y se volvió a c
 | Contraseña mínima de 6 caracteres | `PASSWORD_MIN = 6` por `5` en `UsuarioValidator` | 🔴 1 prueba falla |
 | Código HTTP al auto-eliminarse | `422` por `200` en `UserController::eliminarAjax` | 🔴 1 prueba falla |
 
-Al revertir cada cambio, la suite vuelve a **verde** (192/192).
+Al revertir cada cambio, la suite vuelve a **verde** (208/208).
 
 **Guion sugerido para la demo:**
 
-1. Ejecutar `composer test:coverage`: 192 pruebas en verde y cobertura de 100 %.
+1. Ejecutar `composer test:coverage`: 208 pruebas en verde y cobertura de 100 %.
 2. Abrir [app/validators/MovimientoValidator.php](app/validators/MovimientoValidator.php) y en `abonoSuperaSaldo` cambiar `>` por `>=`.
 3. Ejecutar `composer test`: la suite queda en 🔴 y falla, entre otras, *"un abono IGUAL al saldo (límite)"*.
 4. Revertir con `Ctrl+Z` y volver a ejecutar `composer test`: todo en ✅ verde.

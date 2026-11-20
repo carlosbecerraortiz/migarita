@@ -1,121 +1,96 @@
+<?php
+require_once __DIR__ . '/../layout/helpers.php';
+
+$errores = [
+    'usuario'    => 'No encontramos ese usuario. Revisa cómo lo escribiste.',
+    'contrasena' => 'La contraseña no es correcta. Inténtalo de nuevo.',
+];
+$error = $_GET['error'] ?? '';
+?>
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#15803d">
+    <title>Iniciar sesión · MiGarita</title>
 
-  <title>Inicio de Sesión - MiGarita</title>
-  <meta content="" name="description">
-  <meta content="" name="keywords">
+    <link href="<?= asset('img/favicon1.png') ?>" rel="icon">
+    <link href="<?= asset('img/apple-touch-icon1.png') ?>" rel="apple-touch-icon">
 
-  <!-- Favicons -->
-  <link href="/mi_garita/assets/img/favicon1.png" rel="icon">
-  <link href="/mi_garita/assets/img/apple-touch-icon1.png" rel="apple-touch-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.gstatic.com" rel="preconnect">
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
-
-  <!-- Vendor CSS Files -->
-  <link href="/mi_garita/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="/mi_garita/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="/mi_garita/assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
-
-  <!-- Template Main CSS File -->
-  <link href="/mi_garita/assets/css/style.css" rel="stylesheet">
-
-  <!-- =======================================================
-  * Template Name: NiceAdmin
-  * Template URL: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/
-  * Updated: Apr 7 2025 with Bootstrap v5.3.5
-  * Author: BootstrapMade.com
-  * License: https://bootstrapmade.com/license/
-  ======================================================== -->
+    <link href="<?= asset('vendor/bootstrap/css/bootstrap.min.css') ?>" rel="stylesheet">
+    <link href="<?= asset('vendor/bootstrap-icons/bootstrap-icons.css') ?>" rel="stylesheet">
+    <link href="<?= asset('css/app.css') ?>?v=2" rel="stylesheet">
 </head>
-
 <body>
+<main class="mg-login">
 
-  <main>
-    <div class="container">
-
-      <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
-        <div class="container">
-          <div class="row justify-content-center">
-            <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
-
-              <div class="d-flex justify-content-center py-4">
-                <a href="/mi_garita/index.php?url=login/index" class="logo d-flex align-items-center w-auto">
-                  <img src="/mi_garita/assets/img/logo1.png" alt="">
-                  <span class="d-none d-lg-block">MiGarita</span>
-                </a>
-              </div><!-- End Logo -->
-
-              <div class="card mb-3">
-
-                <div class="card-body">
-
-                  <div class="pt-4 pb-2">
-                    <h5 class="card-title text-center pb-0 fs-4">Inicio de Sesión</h5>
-                    <p class="text-center small">Por favor, ingresa tu usuario y contraseña</p>
-                  </div>
-
-                  <?php if (isset($_GET['error'])): ?>
-                      <div class="alert alert-danger text-center">
-                          <?php if ($_GET['error'] == 'usuario'): ?>
-                              Usuario no existe.
-                          <?php elseif ($_GET['error'] == 'contrasena'): ?>
-                              Contraseña incorrecta.
-                          <?php endif; ?>
-                      </div>
-                  <?php endif; ?>
-
-                  <form class="row g-3 needs-validation" method="POST" action="/mi_garita/index.php?url=login/autenticar" novalidate>
-                    <div class="col-12">
-                      <label for="yourUsername" class="form-label">Usuario</label>
-                      <div class="input-group has-validation">
-                        <span class="input-group-text" id="inputGroupPrepend">@</span>
-                        <input type="text" name="username" class="form-control" id="yourUsername" required>
-                        <div class="invalid-feedback">Por favor ingresa tu usuario</div>
-                      </div>
-                    </div>
-
-                    <div class="col-12">
-                        <label for="yourPassword" class="form-label">Contraseña</label>
-                        <div class="input-group has-validation">
-                            <span class="input-group-text" id="togglePassword" style="cursor: pointer;">
-                                <i class="bi bi-eye-slash" id="iconoPassword"></i>
-                            </span>
-                            <input type="password" name="password" class="form-control" id="yourPassword" required>
-                            <div class="invalid-feedback">Por favor ingresa tu contraseña</div>
-                        </div>
-                    </div>
-
-                    <div class="col-12">
-                      <button class="btn btn-primary w-100" type="submit">Iniciar Sesión</button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-
-            </div>
-          </div>
+    <section class="mg-login-marca" aria-hidden="true">
+        <div class="mg-marca">
+            <img src="<?= asset('img/logo1.png') ?>" alt="">
+            <span>MiGarita <small style="color:rgba(255,255,255,.75)">Cafetería UPC Aguachica</small></span>
         </div>
 
-      </section>
+        <h1>La cartera de la cafetería, clara y al día.</h1>
+        <p>Registra fiados y abonos en segundos y consulta cuánto debe cada cliente sin cuadernos.</p>
 
-    </div>
-  </main><!-- End #main -->
+        <ul>
+            <li><i class="bi bi-lightning-charge"></i> Fiados y abonos en dos toques</li>
+            <li><i class="bi bi-envelope-check"></i> Aviso al cliente por correo en cada movimiento</li>
+            <li><i class="bi bi-file-earmark-pdf"></i> Informes en PDF por cliente</li>
+        </ul>
+    </section>
 
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+    <section class="mg-login-form">
+        <div class="caja">
+            <div class="mg-login-movil">
+                <span class="mg-marca"><img src="<?= asset('img/logo1.png') ?>" alt=""> MiGarita</span>
+            </div>
 
-  <!-- Vendor JS Files -->
-  <script src="/mi_garita/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+            <h2>Bienvenido</h2>
+            <p class="intro">Ingresa con tu usuario y contraseña.</p>
 
-  <!-- Template Main JS File -->
-  <script src="/mi_garita/assets/js/main.js"></script>
-  <script src="/mi_garita/assets/js/login.js"></script>
+            <?php if (isset($errores[$error])): ?>
+                <div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-circle"></i><span><?= e($errores[$error]) ?></span></div>
+            <?php endif; ?>
 
+            <form class="needs-validation" method="POST" action="<?= url('login/autenticar') ?>" novalidate>
+                <div class="mb-3">
+                    <label for="yourUsername" class="form-label">Usuario</label>
+                    <div class="mg-campo-icono">
+                        <i class="bi bi-person"></i>
+                        <input type="text" name="username" id="yourUsername" class="form-control form-control-lg"
+                               autocomplete="username" autocapitalize="none" required autofocus>
+                        <div class="invalid-feedback">Escribe tu usuario.</div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="yourPassword" class="form-label">Contraseña</label>
+                    <div class="input-group input-group-lg has-validation">
+                        <input type="password" name="password" id="yourPassword" class="form-control"
+                               autocomplete="current-password" required>
+                        <button type="button" class="input-group-text ver-clave" id="togglePassword" aria-label="Mostrar u ocultar contraseña">
+                            <i class="bi bi-eye-slash" id="iconoPassword"></i>
+                        </button>
+                        <div class="invalid-feedback">Escribe tu contraseña.</div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-lg w-100" type="submit">Iniciar Sesión</button>
+            </form>
+
+            <p class="pie">Universidad Popular del Cesar · Seccional Aguachica</p>
+        </div>
+    </section>
+
+</main>
+
+<script src="<?= asset('vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
+<script src="<?= asset('js/login.js') ?>?v=2"></script>
 </body>
-
 </html>

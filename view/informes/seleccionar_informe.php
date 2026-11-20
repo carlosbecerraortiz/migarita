@@ -1,100 +1,74 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+<?php
+$titulo = 'Generar informe';
+$seccion = 'clientes';
+$scripts = ['informes.js'];
+require __DIR__ . '/../layout/header.php';
 
-  <title>MiGarita - Clientes</title>
+$nombre = $cliente['nombre'] . ' ' . $cliente['apellido'];
+$hoy = date('Y-m-d');
+?>
 
-  <!-- Favicons -->
-  <link href="/mi_garita/assets/img/favicon1.png" rel="icon">
-  <link href="/mi_garita/assets/img/apple-touch-icon1.png" rel="apple-touch-icon">
-
-  <!-- Google Fonts -->
-  <link href="https://fonts.gstatic.com" rel="preconnect">
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700|Poppins:300,400,500,600,700" rel="stylesheet">
-
-  <!-- Vendor CSS -->
-  <link href="/mi_garita/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="/mi_garita/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="/mi_garita/assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
-
-  <!-- Main CSS -->
-  <link href="/mi_garita/assets/css/style.css" rel="stylesheet">
-
-  <style>
-      .oculto { display: none; }
-  </style>
-</head>
-<body>
-
-<?php require __DIR__ . "/../layout/header.php"; ?>
-<?php require __DIR__ . "/../layout/sidebar.php"; ?>
-
-<main id="main" class="main">
-
-    <div class="pagetitle mb-3">
-        <h1>Generar Informe</h1>
-        <h6 class="text-muted">
-            Cliente: <b><?= $cliente["nombre"] . " " . $cliente["apellido"] ?></b>
-        </h6>
-    </div>
-
-    <section class="section">
-        <div class="card shadow-sm p-4">
-
-            <h5 class="fw-bold mb-4">Seleccione el tipo de informe</h5>
-
-            <!-- SELECTOR -->
-            <select id="tipoInforme" class="form-control mb-2" required>
-                <option value="">Seleccione tipo de informe</option>
-                <option value="mes">Movimientos del Último Mes</option>
-                <option value="fechas">Movimientos Entre Dos Fechas</option>
-                <option value="completo">Informe Completo</option>
-            </select>
-
-            <!-- FORMULARIO ÚLTIMO MES -->
-            <div id="bloqueMes" class="oculto">
-                <a href="/mi_garita/index.php?url=cliente/generarInforme/<?= $cliente['id'] ?>&tipo=mes"
-                   class="btn btn-success w-100 py-2">
-                   <i class="bi bi-calendar2-week me-2"></i> Generar Informe del Último Mes
-                </a>
-            </div>
-
-            <!-- FORMULARIO ENTRE FECHAS -->
-            <div id="bloqueFechas" class="oculto mt-2">
-                <form method="GET" action="/mi_garita/index.php">
-                    <input type="hidden" name="url" value="cliente/generarInforme/<?= $cliente['id'] ?>">
-                    <input type="hidden" name="tipo" value="fechas">
-
-                    <label class="form-label mt-2">Desde:</label>
-                    <input type="date" name="desde" class="form-control mb-3" required>
-
-                    <label class="form-label">Hasta:</label>
-                    <input type="date" name="hasta" class="form-control mb-3" required>
-
-                    <button class="btn btn-success w-100 py-2">
-                        <i class="bi bi-calendar-range me-2"></i> Generar Informe por Fechas
-                    </button>
-                </form>
-            </div>
-
-            <!-- FORMULARIO COMPLETO -->
-            <div id="bloqueCompleto" class="oculto mt-4">
-                <a href="/mi_garita/index.php?url=cliente/generarInforme/<?= $cliente['id'] ?>&tipo=completo"
-                   class="btn btn-success w-100 py-2">
-                   <i class="bi bi-collection me-2"></i> Generar Informe Completo
-                </a>
-            </div>
-
+<div class="mg-migas"><a href="<?= url('cliente/index') ?>"><i class="bi bi-arrow-left"></i> Clientes</a></div>
+<div class="mg-encabezado">
+    <div class="mg-persona">
+        <span class="mg-avatar grande"><?= e(iniciales($cliente['nombre'], $cliente['apellido'])) ?></span>
+        <div>
+            <h1>Generar informe</h1>
+            <p>Historial de fiados y abonos de <?= e($nombre) ?> en PDF.</p>
         </div>
-    </section>
+    </div>
+</div>
 
-</main>
+<section class="mg-tarjeta" style="max-width: 820px">
+    <div class="mg-tarjeta-cuerpo">
+        <form method="GET" action="/mi_garita/index.php" id="formInforme">
+            <input type="hidden" name="url" value="cliente/generarInforme/<?= (int)$cliente['id'] ?>">
 
-<?php require __DIR__ . "/../layout/footer.php"; ?>
+            <span class="form-label d-block mb-2">¿Qué periodo quieres incluir?</span>
+            <div class="mg-opciones" role="radiogroup">
+                <div class="mg-opcion">
+                    <input type="radio" name="tipo" id="tipoMes" value="mes" checked>
+                    <label for="tipoMes">
+                        <i class="bi bi-calendar2-week"></i>
+                        <b>Último mes</b>
+                        <span>Los movimientos de los últimos 30 días.</span>
+                    </label>
+                </div>
+                <div class="mg-opcion">
+                    <input type="radio" name="tipo" id="tipoFechas" value="fechas">
+                    <label for="tipoFechas">
+                        <i class="bi bi-calendar-range"></i>
+                        <b>Entre fechas</b>
+                        <span>Elige el día de inicio y de fin.</span>
+                    </label>
+                </div>
+                <div class="mg-opcion">
+                    <input type="radio" name="tipo" id="tipoCompleto" value="completo">
+                    <label for="tipoCompleto">
+                        <i class="bi bi-collection"></i>
+                        <b>Completo</b>
+                        <span>Todo el historial del cliente.</span>
+                    </label>
+                </div>
+            </div>
 
-<script src="/mi_garita/assets/js/informes.js"></script>
+            <div class="row g-3 mt-1" id="bloqueFechas" hidden>
+                <div class="col-sm-6">
+                    <label for="desde" class="form-label">Desde</label>
+                    <input type="date" name="desde" id="desde" class="form-control" max="<?= $hoy ?>" disabled required>
+                </div>
+                <div class="col-sm-6">
+                    <label for="hasta" class="form-label">Hasta</label>
+                    <input type="date" name="hasta" id="hasta" class="form-control" value="<?= $hoy ?>" max="<?= $hoy ?>" disabled required>
+                </div>
+            </div>
 
-</body>
-</html>
+            <div class="mg-form-acciones">
+                <a href="<?= url('cliente/index') ?>" class="btn btn-claro">Cancelar</a>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-file-earmark-arrow-down"></i> Descargar PDF</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<?php require __DIR__ . '/../layout/footer.php'; ?>

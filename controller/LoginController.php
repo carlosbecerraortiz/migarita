@@ -7,6 +7,12 @@ class LoginController
 {
     public function index()
     {
+        // Si ya hay sesión, ir directo al panel
+        if (isset($_SESSION['id'])) {
+            header("Location: /mi_garita/index.php?url=inicio/index");
+            exit;
+        }
+
         require __DIR__ . "/../view/login/login.php";
     }
 
@@ -38,7 +44,7 @@ class LoginController
         $_SESSION['nombre']  = $user['nombre'];
         $_SESSION['rol']     = $user['rol'];
 
-        header("Location: /mi_garita/index.php?url=cliente/index");
+        header("Location: /mi_garita/index.php?url=inicio/index");
         exit;
     }
 }

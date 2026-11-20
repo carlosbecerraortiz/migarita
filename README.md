@@ -30,7 +30,7 @@ tests/            pruebas: Unit, Integration, Functional, E2E
 ## Pruebas
 
 ```bash
-composer test            # 192 pruebas
+composer test            # 208 pruebas
 composer test:coverage   # cobertura (consola + HTML), falla si es menor al 60 %
 composer coverage:ver    # abre el resumen de cobertura en español
 ```

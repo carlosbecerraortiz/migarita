@@ -186,4 +186,52 @@ class ClienteModel extends Database {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Últimos movimientos (más recientes primero), de todos los clientes o de uno.
+     * Incluye el nombre del cliente, quién lo registró y el método de pago.
+     */
+    public function getUltimosMovimientos(int $limite = 10, ?int $idCliente = null)
+    {
+        $limite = max(1, $limite);
+
+        $sql = "SELECT d.id, d.id_cliente, d.descripcion, d.monto, d.fecha,
+                       c.nombre AS cliente_nombre, c.apellido AS cliente_apellido,
+                       u.nombre AS usuario_nombre,
+                       mp.nombre AS metodo_pago
+                FROM deudas d
+                INNER JOIN clientes c ON c.id = d.id_cliente
+                INNER JOIN usuarios u ON u.id = d.id_usuario
+                LEFT JOIN metodos_pago mp ON mp.id = d.id_metodo_pago";
+
+        $params = [];
+        if ($idCliente !== null) {
+            $sql .= " WHERE d.id_cliente = ?";
+            $params[] = $idCliente;
+        }
+
+        // LIMIT va como entero (ya validado) porque MySQL no acepta un parámetro de texto ahí.
+        $sql .= " ORDER BY d.fecha DESC, d.id DESC LIMIT " . $limite;
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Totales de un rango de fechas (ambos días incluidos):
+     * cuánto se fió, cuánto se abonó y cuántos movimientos hubo.
+     */
+    public function getTotalesMovimientos(string $desde, string $hasta)
+    {
+        $sql = "SELECT COALESCE(SUM(CASE WHEN monto > 0 THEN monto ELSE 0 END), 0) AS fiado,
+                       COALESCE(SUM(CASE WHEN monto < 0 THEN -monto ELSE 0 END), 0) AS abonado,
+                       COUNT(*) AS cantidad
+                FROM deudas
+                WHERE DATE(fecha) BETWEEN ? AND ?";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$desde, $hasta]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }
