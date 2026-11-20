@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Services;
 
+use AuthService;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -53,7 +54,8 @@ final class UsuarioServiceTest extends TestCase
         $this->usuarios->expects($this->once())
             ->method('insert')
             ->with($this->callback(function (array $d) {
-                $this->assertSame(hash('sha256', 'clave123'), $d['password_hash']);
+                $this->assertTrue(password_verify('clave123', $d['password_hash']), 'Se guarda con bcrypt.');
+                $this->assertFalse(AuthService::esHashAntiguo($d['password_hash']));
                 $this->assertArrayNotHasKey('password', $d);
                 $this->assertSame('usuario', $d['rol']);
                 return true;

@@ -29,7 +29,7 @@ test('login con contraseña incorrecta muestra el error', async ({ page }) => {
   await page.locator('#yourPassword').fill('incorrecta');
   await page.getByRole('button', { name: 'Iniciar Sesión' }).click();
 
-  await expect(page.getByRole('alert')).toContainText('La contraseña no es correcta');
+  await expect(page.getByRole('alert')).toContainText('Usuario o contraseña incorrectos');
   // Seguridad: tras mostrar la alerta, el código de error no queda en la URL
   await expect(page).toHaveURL(/url=login\/index$/);
 });

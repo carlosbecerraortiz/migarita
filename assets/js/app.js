@@ -54,7 +54,25 @@
         tbody.classList.add("refrescada");
     }
 
-    window.MG = { esc, dinero, iniciales, confirmar, aviso, refrescar };
+    /** Token CSRF de la sesión (lo imprime el servidor en <meta name="csrf-token">). */
+    function csrf() {
+        return document.querySelector("meta[name='csrf-token']")?.content || "";
+    }
+
+    /** POST con el token CSRF (fetch). `datos` es un objeto { campo: valor }. */
+    function post(url, datos = {}) {
+        return fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-CSRF-Token": csrf(),
+                "Accept": "application/json",
+            },
+            body: new URLSearchParams(datos).toString(),
+        });
+    }
+
+    window.MG = { esc, dinero, iniciales, confirmar, aviso, refrescar, csrf, post };
 
     document.addEventListener("DOMContentLoaded", () => {
         // Avisos de éxito: se cierran solos o con la X
@@ -90,6 +108,11 @@
             form.method = "POST";
             form.action = boton.dataset.accion;
             form.hidden = true;
+            const token = document.createElement("input");
+            token.type = "hidden";
+            token.name = "_csrf";
+            token.value = csrf();
+            form.appendChild(token);
             document.body.appendChild(form);
             form.submit();
         });

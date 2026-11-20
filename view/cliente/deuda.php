@@ -89,6 +89,7 @@ $error = $_GET['error'] ?? '';
             <?php endif; ?>
 
             <form method="POST" action="<?= url('cliente/guardarMovimiento/' . (int)$cliente['id']) ?>" id="formMovimiento" novalidate>
+<?= Csrf::campo() ?>
 
                 <div class="mb-4">
                     <span class="form-label d-block">Tipo de movimiento</span>

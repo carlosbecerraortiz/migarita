@@ -38,6 +38,7 @@ $rolActual = $datos['rol'] ?? '';
 <?php endif; ?>
 
 <form method="POST" action="<?= e($accion) ?>" novalidate>
+    <?= Csrf::campo() ?>
     <div class="mg-form-seccion">
         <h3>Datos personales</h3>
         <p>Nombre de la persona que usará la cuenta.</p>

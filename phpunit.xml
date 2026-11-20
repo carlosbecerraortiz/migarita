@@ -31,6 +31,8 @@
         </include>
         <exclude>
             <directory>app/config</directory>
+            <!-- Arranque de cada petición (sesión, cabeceras): lo ejercitan las pruebas funcionales -->
+            <file>app/arranque.php</file>
         </exclude>
     </source>
 

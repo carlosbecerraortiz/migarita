@@ -1,8 +1,22 @@
 <?php
-session_start();
-date_default_timezone_set('America/Bogota');
+// Sesión segura, cabeceras, errores ocultos y cierre por inactividad
+require_once __DIR__ . "/app/arranque.php";
 
-require_once __DIR__ . "/app/services/Flash.php";
+// Protección CSRF: todo POST debe traer el token secreto de la sesión
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST'
+    && !Csrf::esValido(Csrf::tokenRecibido($_POST, $_SERVER))) {
+    http_response_code(403);
+    $esAjax = isset($_SERVER['HTTP_X_CSRF_TOKEN']) || str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'json');
+    if ($esAjax) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => false, 'error' => 'csrf']);
+    } else {
+        echo '<!DOCTYPE html><meta charset="utf-8"><title>Solicitud rechazada</title>'
+            . '<p style="font-family:sans-serif;padding:24px">La página caducó o la solicitud no es válida. '
+            . '<a href="/mi_garita/">Vuelve a la aplicación</a> e inténtalo de nuevo.</p>';
+    }
+    exit;
+}
 
 // Los avisos (ok / error / monto) llegan por la SESIÓN, nunca por la URL.
 // Se ignoran los que vengan escritos en la URL y se entregan a las vistas

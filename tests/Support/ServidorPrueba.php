@@ -19,6 +19,8 @@ final class ServidorPrueba
     private string $baseUrl = '';
     private string $rutaBd;
     private ?string $cookieSesion = null;
+    /** Token CSRF de la sesión, tomado de <meta name="csrf-token"> como lo haría el navegador. */
+    private ?string $csrf = null;
     public PDO $bd;
 
     public function __construct()
@@ -87,6 +89,12 @@ final class ServidorPrueba
     public function cerrarSesion(): void
     {
         $this->cookieSesion = null;
+        $this->csrf = null;
+    }
+
+    public function tokenCsrf(): ?string
+    {
+        return $this->csrf;
     }
 
     public function get(string $url): RespuestaHttp
@@ -94,9 +102,20 @@ final class ServidorPrueba
         return $this->enviar('GET', $url);
     }
 
+    /** POST como el navegador: incluye el token CSRF de la sesión. */
     public function post(string $url, array $campos = []): RespuestaHttp
     {
-        return $this->enviar('POST', $url, $campos);
+        if ($this->csrf === null) {
+            $this->get('/mi_garita/index.php?url=login/index'); // obtener sesión y token
+        }
+
+        return $this->enviar('POST', $url, $campos + ['_csrf' => $this->csrf]);
+    }
+
+    /** POST SIN token CSRF (para comprobar que se rechaza). */
+    public function postSinCsrf(string $url, array $campos = [], array $cabecerasExtra = []): RespuestaHttp
+    {
+        return $this->enviar('POST', $url, $campos, $cabecerasExtra);
     }
 
     public function iniciarSesionComo(string $usuario, string $password): RespuestaHttp
@@ -107,7 +126,7 @@ final class ServidorPrueba
         ]);
     }
 
-    private function enviar(string $metodo, string $url, array $campos = []): RespuestaHttp
+    private function enviar(string $metodo, string $url, array $campos = [], array $cabecerasExtra = []): RespuestaHttp
     {
         $curl = curl_init($this->baseUrl . $url);
         $cabeceras = [];
@@ -135,6 +154,10 @@ final class ServidorPrueba
             $opciones[CURLOPT_POSTFIELDS] = http_build_query($campos);
         }
 
+        if ($cabecerasExtra) {
+            $opciones[CURLOPT_HTTPHEADER] = $cabecerasExtra;
+        }
+
         curl_setopt_array($curl, $opciones);
         $cuerpo = curl_exec($curl);
 
@@ -150,6 +173,11 @@ final class ServidorPrueba
             if (stripos($cookie, 'PHPSESSID=') === 0) {
                 $this->cookieSesion = explode(';', $cookie)[0];
             }
+        }
+
+        // Recordar el token CSRF que imprime la página (igual que lo lee app.js)
+        if (preg_match('/<meta name="csrf-token" content="([a-f0-9]+)"/', (string)$cuerpo, $m)) {
+            $this->csrf = $m[1];
         }
 
         return new RespuestaHttp($estado, $cabeceras, $cuerpo);

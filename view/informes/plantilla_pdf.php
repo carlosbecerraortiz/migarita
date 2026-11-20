@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/../layout/helpers.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -124,12 +125,12 @@
     
     <!-- INFORMACIÓN DEL CLIENTE -->
     <div class="info-cliente">
-        <p><strong>CLIENTE:</strong> <?= strtoupper($cliente['nombre'] . ' ' . $cliente['apellido']) ?></p>
-        <p><strong>CÉDULA:</strong> <?= $cliente['cedula'] ?></p>
-        <p><strong>TELÉFONO:</strong> <?= $cliente['telefono'] ?></p>
-        <p><strong>CORREO:</strong> <?= $cliente['correo'] ?></p>
+        <p><strong>CLIENTE:</strong> <?= e(mb_strtoupper($cliente['nombre'] . ' ' . $cliente['apellido'], 'UTF-8')) ?></p>
+        <p><strong>CÉDULA:</strong> <?= e($cliente['cedula']) ?></p>
+        <p><strong>TELÉFONO:</strong> <?= e($cliente['telefono']) ?></p>
+        <p><strong>CORREO:</strong> <?= e($cliente['correo']) ?></p>
         <?php if (isset($tituloInforme)): ?>
-        <p><strong>TIPO DE INFORME:</strong> <?= $tituloInforme ?></p>
+        <p><strong>TIPO DE INFORME:</strong> <?= e($tituloInforme) ?></p>
         <?php endif; ?>
         <p><strong>FECHA DE GENERACIÓN:</strong> <?= date('d/m/Y H:i:s') ?></p>
     </div>
@@ -155,8 +156,8 @@
                 <tr>
                     <td><?= date('d/m/Y', strtotime($f['fecha'])) ?></td>
                     <td><?= date('h:i A', strtotime($f['fecha'])) ?></td>
-                    <td><?= $f['usuario_nombre'] . ' ' . $f['usuario_apellido'] ?></td>
-                    <td><?= $f['descripcion'] ?></td>
+                    <td><?= e($f['usuario_nombre'] . ' ' . $f['usuario_apellido']) ?></td>
+                    <td><?= e($f['descripcion']) ?></td>
                     <td class="text-right">$ <?= number_format($f['monto'], 0, ',', '.') ?></td>
                 </tr>
                 <?php endforeach; ?>
@@ -186,9 +187,9 @@
                 <tr>
                     <td><?= date('d/m/Y', strtotime($p['fecha'])) ?></td>
                     <td><?= date('h:i A', strtotime($p['fecha'])) ?></td>
-                    <td><?= $p['usuario_nombre'] . ' ' . $p['usuario_apellido'] ?></td>
-                    <td><?= $p['descripcion'] ?></td>
-                    <td><?= ucfirst($p['metodo_pago'] ?? 'N/A') ?></td>
+                    <td><?= e($p['usuario_nombre'] . ' ' . $p['usuario_apellido']) ?></td>
+                    <td><?= e($p['descripcion']) ?></td>
+                    <td><?= e(ucfirst($p['metodo_pago'] ?? 'N/A')) ?></td>
                     <td class="text-right">$ <?= number_format($p['monto_mostrar'], 0, ',', '.') ?></td>
                 </tr>
                 <?php endforeach; ?>
@@ -198,7 +199,7 @@
     
     <!-- SALDO FINAL -->
     <div class="saldo-final">
-        SALDO POR PAGAR DEL CLIENTE <?= strtoupper($cliente['nombre'] . ' ' . $cliente['apellido']) ?>: 
+        SALDO POR PAGAR DEL CLIENTE <?= e(mb_strtoupper($cliente['nombre'] . ' ' . $cliente['apellido'], 'UTF-8')) ?>: 
         <span style="color: <?= $saldo > 0 ? '#d9534f' : '#5cb85c' ?>;">
             $ <?= number_format($saldo, 0, ',', '.') ?>
         </span>

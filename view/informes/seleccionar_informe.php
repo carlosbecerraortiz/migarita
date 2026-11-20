@@ -24,6 +24,7 @@ $hoy = date('Y-m-d');
     <div class="mg-tarjeta-cuerpo">
         <!-- POST: el periodo y las fechas no quedan en la URL -->
         <form method="POST" action="<?= url('cliente/generarInforme/' . (int)$cliente['id']) ?>" id="formInforme">
+<?= Csrf::campo() ?>
 
             <span class="form-label d-block mb-2">¿Qué periodo quieres incluir?</span>
             <div class="mg-opciones" role="radiogroup">

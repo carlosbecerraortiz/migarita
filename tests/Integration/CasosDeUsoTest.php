@@ -158,6 +158,37 @@ final class CasosDeUsoTest extends TestCase
     }
 
     #[Test]
+    public function al_iniciar_sesion_la_contrasena_antigua_queda_guardada_con_bcrypt(): void
+    {
+        // Arrange: el cajero tiene el hash SHA-256 del sistema anterior
+        $auth = new AuthService($this->usuarios, new BitacoraModel($this->pdo));
+        $this->assertTrue(AuthService::esHashAntiguo($this->usuarios->getById(2)['password_hash']));
+
+        // Act
+        $login = $auth->autenticar('cajero', BaseDatosPrueba::PASSWORD_CAJERO, '::1', '');
+
+        // Assert: en la BD ya no queda el hash débil, y la misma clave sigue sirviendo
+        $nuevo = $this->usuarios->getById(2)['password_hash'];
+        $this->assertTrue($login['ok']);
+        $this->assertFalse(AuthService::esHashAntiguo($nuevo));
+        $this->assertTrue(password_verify(BaseDatosPrueba::PASSWORD_CAJERO, $nuevo));
+        $this->assertTrue($auth->autenticar('cajero', BaseDatosPrueba::PASSWORD_CAJERO, '::1', '')['ok']);
+    }
+
+    #[Test]
+    public function el_sexto_intento_desde_la_misma_ip_queda_bloqueado_aunque_la_clave_sea_correcta(): void
+    {
+        $auth = new AuthService($this->usuarios, new BitacoraModel($this->pdo));
+
+        for ($i = 0; $i < AuthService::MAX_INTENTOS; $i++) {
+            $this->assertSame('contrasena', $auth->autenticar('admin', 'mala', '10.1.1.1', '')['error']);
+        }
+
+        $this->assertSame('bloqueado', $auth->autenticar('admin', BaseDatosPrueba::PASSWORD_ADMIN, '10.1.1.1', '')['error']);
+        $this->assertTrue($auth->autenticar('admin', BaseDatosPrueba::PASSWORD_ADMIN, '10.2.2.2', '')['ok'], 'Otra IP no está bloqueada.');
+    }
+
+    #[Test]
     public function la_conexion_inyectada_es_la_que_usa_el_modelo(): void
     {
         $this->assertSame($this->pdo, $this->clientes->getConexion());

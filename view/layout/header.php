@@ -30,6 +30,7 @@ $menu = [
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#15803d">
+    <meta name="csrf-token" content="<?= e(Csrf::token()) ?>">
     <title><?= e($titulo) ?> · MiGarita</title>
 
     <link href="<?= asset('img/favicon1.png') ?>" rel="icon">
@@ -41,14 +42,8 @@ $menu = [
 
     <link href="<?= asset('vendor/bootstrap/css/bootstrap.min.css') ?>" rel="stylesheet">
     <link href="<?= asset('vendor/bootstrap-icons/bootstrap-icons.css') ?>" rel="stylesheet">
-    <link href="<?= asset('css/app.css') ?>?v=6" rel="stylesheet">
-    <script>
-        /* Si la página llega sin transición de vista, animar la entrada del contenido */
-        (function (html) {
-            if (!("onpagereveal" in window)) { html.classList.add("mg-entrada"); return; }
-            addEventListener("pagereveal", function (e) { if (!e.viewTransition) html.classList.add("mg-entrada"); });
-        })(document.documentElement);
-    </script>
+    <link href="<?= asset('css/app.css') ?>?v=7" rel="stylesheet">
+    <script src="<?= asset('js/entrada.js') ?>?v=7"></script>
 </head>
 <body data-session-id="<?= (int)$_SESSION['id'] ?>" data-session-rol="<?= e($rolSesion) ?>">
 <div class="mg-app">
@@ -77,9 +72,12 @@ $menu = [
                 <div class="nombre"><?= e($nombreSesion) ?></div>
                 <div class="rol"><?= $rolSesion === 'superusuario' ? 'Superusuario' : 'Usuario' ?></div>
             </div>
-            <a href="/mi_garita/logout.php" class="salir" title="Cerrar sesión" aria-label="Cerrar sesión">
-                <i class="bi bi-box-arrow-right"></i>
-            </a>
+            <form method="POST" action="/mi_garita/logout.php" class="m-0">
+                <?= Csrf::campo() ?>
+                <button type="submit" class="salir" title="Cerrar sesión" aria-label="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right"></i>
+                </button>
+            </form>
         </div>
     </aside>
 

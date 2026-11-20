@@ -83,13 +83,18 @@ class EmailService
   
     private function generarPlantillaHTML($datosCliente, $datosMovimiento, $usuarioNombre)
     {
-        $nombreCliente = $datosCliente['nombre'] . ' ' . $datosCliente['apellido'];
+        // Los datos escritos por usuarios se escapan: el correo es HTML y un nombre o
+        // descripción con etiquetas no debe poder insertar enlaces o contenido.
+        $html = fn($texto) => htmlspecialchars((string)$texto, ENT_QUOTES, 'UTF-8');
+
+        $nombreCliente = $html($datosCliente['nombre'] . ' ' . $datosCliente['apellido']);
+        $usuarioNombre = $html($usuarioNombre);
         $tipoMovimiento = $datosMovimiento['tipo'] === 'fiado' ? 'FIADO' : 'ABONO';
         $fecha = date('d/m/Y', strtotime($datosMovimiento['fecha']));
         $hora = date('h:i A', strtotime($datosMovimiento['fecha']));
         $monto = number_format(abs($datosMovimiento['monto']), 0, ',', '.');
-        $descripcion = $datosMovimiento['descripcion'];
-        
+        $descripcion = $html($datosMovimiento['descripcion']);
+
         // Color según tipo de movimiento
         $color = $datosMovimiento['tipo'] === 'fiado' ? '#d9534f' : '#5cb85c';
         $colorClaro = $datosMovimiento['tipo'] === 'fiado' ? '#f8d7da' : '#d4edda';

@@ -1,9 +1,13 @@
 <?php
 require_once __DIR__ . '/../layout/helpers.php';
 
+// Mismo mensaje para usuario inexistente y contraseña incorrecta:
+// así nadie puede averiguar qué usuarios existen probando nombres.
 $errores = [
-    'usuario'    => 'No encontramos ese usuario. Revisa cómo lo escribiste.',
-    'contrasena' => 'La contraseña no es correcta. Inténtalo de nuevo.',
+    'usuario'         => 'Usuario o contraseña incorrectos.',
+    'contrasena'      => 'Usuario o contraseña incorrectos.',
+    'bloqueado'       => 'Demasiados intentos fallidos. Espera ' . AuthService::MINUTOS_BLOQUEO . ' minutos e inténtalo de nuevo.',
+    'sesion_expirada' => 'Tu sesión se cerró por inactividad. Vuelve a ingresar.',
 ];
 $error = $_GET['error'] ?? '';
 ?>
@@ -13,6 +17,7 @@ $error = $_GET['error'] ?? '';
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#15803d">
+    <meta name="csrf-token" content="<?= e(Csrf::token()) ?>">
     <title>Iniciar sesión · MiGarita</title>
 
     <link href="<?= asset('img/favicon1.png') ?>" rel="icon">
@@ -24,14 +29,8 @@ $error = $_GET['error'] ?? '';
 
     <link href="<?= asset('vendor/bootstrap/css/bootstrap.min.css') ?>" rel="stylesheet">
     <link href="<?= asset('vendor/bootstrap-icons/bootstrap-icons.css') ?>" rel="stylesheet">
-    <link href="<?= asset('css/app.css') ?>?v=6" rel="stylesheet">
-    <script>
-        /* Si la página llega sin transición de vista, animar la entrada del contenido */
-        (function (html) {
-            if (!("onpagereveal" in window)) { html.classList.add("mg-entrada"); return; }
-            addEventListener("pagereveal", function (e) { if (!e.viewTransition) html.classList.add("mg-entrada"); });
-        })(document.documentElement);
-    </script>
+    <link href="<?= asset('css/app.css') ?>?v=7" rel="stylesheet">
+    <script src="<?= asset('js/entrada.js') ?>?v=7"></script>
 </head>
 <body>
 <main class="mg-login">
@@ -66,6 +65,7 @@ $error = $_GET['error'] ?? '';
             <?php endif; ?>
 
             <form class="needs-validation" method="POST" action="<?= url('login/autenticar') ?>" novalidate>
+                <?= Csrf::campo() ?>
                 <div class="mb-3">
                     <label for="yourUsername" class="form-label">Usuario</label>
                     <div class="mg-campo-icono">
@@ -98,6 +98,6 @@ $error = $_GET['error'] ?? '';
 </main>
 
 <script src="<?= asset('vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
-<script src="<?= asset('js/login.js') ?>?v=6"></script>
+<script src="<?= asset('js/login.js') ?>?v=7"></script>
 </body>
 </html>

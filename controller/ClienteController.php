@@ -265,8 +265,12 @@ class ClienteController
         $html = ob_get_clean();
 
         $dompdf = new \Dompdf\Dompdf([
-            'isRemoteEnabled' => true,
-            'chroot' => realpath(__DIR__ . '/../../')
+            // Seguridad: el PDF no descarga nada de internet ni de la red interna,
+            // no ejecuta PHP y solo puede leer archivos dentro del proyecto.
+            'isRemoteEnabled' => false,
+            'isPhpEnabled' => false,
+            'isJavascriptEnabled' => false,
+            'chroot' => realpath(__DIR__ . '/..')
         ]);
 
         $dompdf->loadHtml($html);

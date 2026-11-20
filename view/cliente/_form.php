@@ -30,6 +30,7 @@ $ayuda = function (string $campo) use ($mensaje) {
 <?php endif; ?>
 
 <form method="POST" action="<?= e($accion) ?>" novalidate>
+    <?= Csrf::campo() ?>
     <div class="mg-form-seccion">
         <h3>Datos personales</h3>
         <p>Así aparecerá el cliente en la lista y en los informes.</p>

@@ -19,7 +19,10 @@ $codigoOk = $_GET['ok'] ?? '';
                 <i class="bi <?= $icono ?>"></i><?= $texto ?>
             </a>
         <?php endforeach; ?>
-        <a href="/mi_garita/logout.php"><i class="bi bi-box-arrow-right"></i>Salir</a>
+        <form method="POST" action="/mi_garita/logout.php" class="m-0 d-contents">
+            <?= Csrf::campo() ?>
+            <button type="submit"><i class="bi bi-box-arrow-right"></i>Salir</button>
+        </form>
     </nav>
 </div>
 
@@ -68,9 +71,9 @@ $codigoOk = $_GET['ok'] ?? '';
 </div>
 
 <script src="<?= asset('vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
-<script src="<?= asset('js/app.js') ?>?v=6"></script>
+<script src="<?= asset('js/app.js') ?>?v=7"></script>
 <?php foreach ($scripts as $script): ?>
-    <script src="<?= asset('js/' . $script) ?>?v=6"></script>
+    <script src="<?= asset('js/' . $script) ?>?v=7"></script>
 <?php endforeach; ?>
 </body>
 </html>

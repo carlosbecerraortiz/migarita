@@ -56,11 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function buscar() {
         // POST: lo que se busca no queda en la URL ni en los registros del servidor
-        fetch(`${URL_BASE}user/buscarAjax`, {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: "q=" + encodeURIComponent(input.value.trim()),
-        })
+        window.MG.post(`${URL_BASE}user/buscarAjax`, { q: input.value.trim() })
             .then(res => res.json())
             .then(data => {
                 tabla.querySelectorAll("tr[data-id]").forEach(tr => tr.remove());
@@ -94,11 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!ok) return;
 
         try {
-            const res = await fetch(`${URL_BASE}user/eliminarAjax`, {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: "id=" + encodeURIComponent(boton.dataset.eliminarUsuario),
-            });
+            const res = await window.MG.post(`${URL_BASE}user/eliminarAjax`, { id: boton.dataset.eliminarUsuario });
             const datos = await res.json();
 
             if (datos.ok) {

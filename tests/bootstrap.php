@@ -30,6 +30,7 @@ require_once $raiz . '/app/services/UsuarioService.php';
 require_once $raiz . '/app/services/InformeService.php';
 require_once $raiz . '/app/services/PanelService.php';
 require_once $raiz . '/app/services/Flash.php';
+require_once $raiz . '/app/services/Csrf.php';
 
 require_once __DIR__ . '/Support/BaseDatosPrueba.php';
 require_once __DIR__ . '/Support/ServidorPrueba.php';

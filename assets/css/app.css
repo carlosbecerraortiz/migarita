@@ -738,3 +738,19 @@ a { text-decoration: none; }
 .mg-datos li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--mg-borde); }
 .mg-datos li span { color: var(--mg-texto-suave); }
 .mg-datos li b { text-align: right; word-break: break-all; }
+
+/* Cerrar sesión es un formulario POST (protección CSRF) con aspecto de enlace */
+.d-contents { display: contents; }
+.mg-sesion button.salir {
+    border: 0; background: transparent; line-height: 1;
+    color: var(--mg-texto-suave); font-size: 20px; padding: 6px; border-radius: 8px;
+}
+.mg-sesion button.salir:hover { color: var(--mg-peligro); background: var(--mg-peligro-suave); }
+@media (max-width: 991.98px) {
+    .mg-nav-movil button {
+        border: 0; background: transparent;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+        color: var(--mg-texto-tenue); font-size: 11.5px; font-weight: 600;
+    }
+    .mg-nav-movil button i { font-size: 21px; }
+}

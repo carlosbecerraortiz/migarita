@@ -93,11 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function buscar() {
         const texto = input.value.trim();
         // POST: lo que se busca (nombres, cédulas) no queda en la URL ni en los registros
-        fetch(`${URL_BASE}cliente/buscarAjax`, {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: "q=" + encodeURIComponent(texto),
-        })
+        window.MG.post(`${URL_BASE}cliente/buscarAjax`, { q: texto })
             .then(res => res.json())
             .then(data => {
                 filas().forEach(tr => tr.remove());

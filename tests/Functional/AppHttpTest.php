@@ -98,7 +98,7 @@ final class AppHttpTest extends TestCase
 
         // Assert HTTP: URL limpia y el mensaje se muestra en la página siguiente
         $this->assertRedirigeLimpioA('login/index', $r);
-        $this->assertStringContainsString('La contraseña no es correcta', $this->seguir($r)->cuerpo);
+        $this->assertStringContainsString('Usuario o contraseña incorrectos.', $this->seguir($r)->cuerpo);
 
         // Assert persistencia: intento fallido registrado
         $fila = $this->bd()->query('SELECT * FROM bitacora_login')->fetch(PDO::FETCH_ASSOC);
@@ -113,7 +113,7 @@ final class AppHttpTest extends TestCase
         $r = self::$app->iniciarSesionComo('nadie', 'x');
 
         $this->assertRedirigeLimpioA('login/index', $r);
-        $this->assertStringContainsString('No encontramos ese usuario', $this->seguir($r)->cuerpo);
+        $this->assertStringContainsString('Usuario o contraseña incorrectos.', $this->seguir($r)->cuerpo, 'Mismo mensaje: no revela si el usuario existe.');
     }
 
     #[Test]
@@ -473,6 +473,103 @@ final class AppHttpTest extends TestCase
         $this->assertSame(400, self::$app->post(self::URL . 'user/eliminarAjax')->estado);
     }
 
+    // ---------------------------------------------------------------- Seguridad
+
+    #[Test]
+    public function un_formulario_enviado_sin_token_csrf_se_rechaza_y_no_guarda_nada(): void
+    {
+        // Simula otra página web intentando crear un cliente con la sesión del usuario
+        $this->entrarComoAdmin();
+
+        $r = self::$app->postSinCsrf(self::URL . 'cliente/guardar', [
+            'cedula' => '777', 'nombre' => 'Intruso', 'apellido' => 'X',
+            'telefono' => '300', 'correo' => 'x@x.co', 'id_tipo_cliente' => '1',
+        ]);
+
+        $this->assertSame(403, $r->estado);
+        $this->assertSame(0, (int)$this->bd()->query('SELECT COUNT(*) FROM clientes')->fetchColumn());
+    }
+
+    #[Test]
+    public function un_token_csrf_falso_tambien_se_rechaza(): void
+    {
+        $this->entrarComoAdmin();
+        $id = BaseDatosPrueba::crearCliente($this->bd());
+
+        $r = self::$app->postSinCsrf(self::URL . "cliente/eliminar/$id", ['_csrf' => str_repeat('a', 64)]);
+
+        $this->assertSame(403, $r->estado);
+        $this->assertNotFalse($this->bd()->query("SELECT id FROM clientes WHERE id = $id")->fetchColumn());
+    }
+
+    #[Test]
+    public function una_peticion_ajax_sin_token_csrf_responde_403_en_json(): void
+    {
+        $this->entrarComoAdmin();
+
+        $r = self::$app->postSinCsrf(self::URL . 'user/eliminarAjax', ['id' => '2'], ['Accept: application/json']);
+
+        $this->assertSame(403, $r->estado);
+        $this->assertSame(['ok' => false, 'error' => 'csrf'], $r->json());
+        $this->assertNotFalse($this->bd()->query('SELECT id FROM usuarios WHERE id = 2')->fetchColumn());
+    }
+
+    #[Test]
+    public function el_token_csrf_tambien_se_acepta_en_la_cabecera_de_ajax(): void
+    {
+        $this->entrarComoAdmin();
+        BaseDatosPrueba::crearCliente($this->bd(), ['nombre' => 'Laura']);
+
+        $r = self::$app->postSinCsrf(self::URL . 'cliente/buscarAjax', ['q' => 'Laura'], ['X-CSRF-Token: ' . self::$app->tokenCsrf()]);
+
+        $this->assertSame(200, $r->estado);
+        $this->assertCount(1, $r->json());
+    }
+
+    #[Test]
+    public function cerrar_sesion_con_un_enlace_get_no_cierra_la_sesion(): void
+    {
+        $this->entrarComoAdmin();
+
+        self::$app->get('/mi_garita/logout.php');
+
+        $this->assertSame(200, self::$app->get(self::URL . 'inicio/index')->estado, 'La sesión sigue activa.');
+    }
+
+    #[Test]
+    public function la_cookie_de_sesion_es_httponly_samesite_y_solo_para_la_app(): void
+    {
+        $r = self::$app->get('/mi_garita/');
+
+        $cookie = $r->cabecera('set-cookie');
+        $this->assertNotNull($cookie);
+        $this->assertStringContainsStringIgnoringCase('HttpOnly', $cookie);
+        $this->assertStringContainsStringIgnoringCase('SameSite=Lax', $cookie);
+        $this->assertStringContainsString('path=/mi_garita/', $cookie);
+    }
+
+    #[Test]
+    public function no_se_anuncia_la_version_de_php(): void
+    {
+        $this->assertNull(self::$app->get('/mi_garita/')->cabecera('x-powered-by'));
+    }
+
+    #[Test]
+    public function tras_5_intentos_fallidos_el_login_queda_bloqueado(): void
+    {
+        for ($i = 0; $i < 5; $i++) {
+            self::$app->iniciarSesionComo('admin', 'mala-' . $i);
+        }
+
+        // Act: el sexto intento, incluso con la clave correcta
+        $r = self::$app->iniciarSesionComo('admin', BaseDatosPrueba::PASSWORD_ADMIN);
+
+        // Assert
+        $this->assertRedirigeLimpioA('login/index', $r);
+        $this->assertStringContainsString('Demasiados intentos fallidos', $this->seguir($r)->cuerpo);
+        $this->assertSame(302, self::$app->get(self::URL . 'inicio/index')->estado, 'No inició sesión.');
+    }
+
     // ---------------------------------------------------------------- URLs sin datos
 
     #[Test]
@@ -569,7 +666,7 @@ final class AppHttpTest extends TestCase
         $this->entrarComoAdmin();
 
         // Act
-        $salir = self::$app->get('/mi_garita/logout.php');
+        $salir = self::$app->post('/mi_garita/logout.php');
         $despues = self::$app->get(self::URL . 'cliente/index');
 
         // Assert

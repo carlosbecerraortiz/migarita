@@ -102,6 +102,34 @@ final class UserModelTest extends TestCase
     }
 
     #[Test]
+    public function la_bitacora_cuenta_solo_los_fallos_recientes_de_esa_ip(): void
+    {
+        // Arrange
+        $bitacora = new BitacoraModel($this->pdo);
+        $bitacora->registrarLogin(null, '10.0.0.1', 'x', 'Windows', 0);
+        $bitacora->registrarLogin(null, '10.0.0.1', 'x', 'Windows', 0);
+        $bitacora->registrarLogin(1, '10.0.0.1', 'x', 'Windows', 1);   // éxito: no cuenta
+        $bitacora->registrarLogin(null, '10.0.0.2', 'x', 'Windows', 0); // otra IP: no cuenta
+        $this->pdo->exec("INSERT INTO bitacora_login (ip, exito, fecha) VALUES ('10.0.0.1', 0, '2020-01-01 00:00:00')"); // viejo
+
+        // Act
+        $fallos = $bitacora->contarFallidosRecientes('10.0.0.1', date('Y-m-d H:i:s', time() - 15 * 60));
+
+        // Assert
+        $this->assertSame(2, $fallos);
+    }
+
+    #[Test]
+    public function la_bitacora_recorta_un_navegador_demasiado_largo(): void
+    {
+        // Caso borde: un User-Agent gigante no debe romper el registro (columna de 250)
+        (new BitacoraModel($this->pdo))->registrarLogin(null, '::1', str_repeat('A', 5000), 'Desconocido', 0);
+
+        $guardado = $this->pdo->query('SELECT navegador FROM bitacora_login')->fetchColumn();
+        $this->assertSame(250, strlen($guardado));
+    }
+
+    #[Test]
     public function la_bitacora_registra_cada_intento_de_inicio_de_sesion(): void
     {
         // Arrange

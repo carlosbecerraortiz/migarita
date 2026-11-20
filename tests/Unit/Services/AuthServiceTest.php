@@ -92,12 +92,95 @@ final class AuthServiceTest extends TestCase
     }
 
     #[Test]
-    public function el_hash_de_la_contrasena_es_sha256(): void
+    public function las_contrasenas_nuevas_se_guardan_con_bcrypt_y_sal_aleatoria(): void
     {
-        $this->assertSame(
-            '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9',
-            AuthService::hashPassword('admin123')
-        );
+        // Act
+        $hash1 = AuthService::hashPassword('admin123');
+        $hash2 = AuthService::hashPassword('admin123');
+
+        // Assert: bcrypt, distinto cada vez (sal), y verificable
+        $this->assertStringStartsWith('$2y$', $hash1);
+        $this->assertNotSame($hash1, $hash2, 'La misma clave produce hashes distintos.');
+        $this->assertTrue(AuthService::verificar('admin123', $hash1));
+        $this->assertFalse(AuthService::verificar('admin124', $hash1));
+        $this->assertFalse(AuthService::esHashAntiguo($hash1));
+    }
+
+    #[Test]
+    public function todavia_reconoce_las_contrasenas_con_el_hash_antiguo(): void
+    {
+        $antiguo = hash('sha256', 'admin123');
+
+        $this->assertTrue(AuthService::esHashAntiguo($antiguo));
+        $this->assertTrue(AuthService::verificar('admin123', $antiguo));
+        $this->assertFalse(AuthService::verificar('otra', $antiguo));
+    }
+
+    #[Test]
+    public function al_iniciar_sesion_con_hash_antiguo_se_migra_a_bcrypt(): void
+    {
+        // Arrange: la cuenta tiene el hash SHA-256 del sistema anterior
+        $this->usuarios->method('getByUsuario')->willReturn($this->usuarioAdmin());
+
+        // Assert (spy): se guarda un hash nuevo y seguro para la misma clave
+        $this->usuarios->expects($this->once())
+            ->method('update')
+            ->with(1, $this->callback(fn(array $d) => password_verify('admin123', $d['password_hash'])));
+
+        // Act
+        $this->assertTrue($this->auth->autenticar('admin', 'admin123', '::1', self::UA_WINDOWS)['ok']);
+    }
+
+    #[Test]
+    public function con_hash_moderno_no_se_vuelve_a_guardar_la_contrasena(): void
+    {
+        $this->usuarios->method('getByUsuario')
+            ->willReturn(['password_hash' => password_hash('admin123', PASSWORD_DEFAULT)] + $this->usuarioAdmin());
+        $this->usuarios->expects($this->never())->method('update');
+
+        $this->assertTrue($this->auth->autenticar('admin', 'admin123', '::1', self::UA_WINDOWS)['ok']);
+    }
+
+    #[Test]
+    public function tras_5_intentos_fallidos_desde_una_ip_se_bloquea_el_login(): void
+    {
+        // Arrange: la bitácora ya tiene 5 fallos recientes desde esa IP (límite)
+        $this->bitacora->method('contarFallidosRecientes')->with('10.0.0.9')->willReturn(5);
+
+        // Assert: ni siquiera se consulta el usuario, aunque la clave sea correcta
+        $this->usuarios->expects($this->never())->method('getByUsuario');
+        $this->bitacora->expects($this->once())->method('registrarLogin')->with(null, '10.0.0.9', self::UA_WINDOWS, 'Windows', 0);
+
+        // Act
+        $resultado = $this->auth->autenticar('admin', 'admin123', '10.0.0.9', self::UA_WINDOWS);
+
+        $this->assertSame(['ok' => false, 'error' => 'bloqueado'], $resultado);
+    }
+
+    #[Test]
+    public function con_4_intentos_fallidos_todavia_se_puede_iniciar_sesion(): void
+    {
+        // Valor límite: uno menos que el máximo
+        $this->bitacora->method('contarFallidosRecientes')->willReturn(AuthService::MAX_INTENTOS - 1);
+        $this->usuarios->method('getByUsuario')->willReturn($this->usuarioAdmin());
+
+        $this->assertTrue($this->auth->autenticar('admin', 'admin123', '10.0.0.9', self::UA_WINDOWS)['ok']);
+    }
+
+    #[Test]
+    public function el_bloqueo_cuenta_los_fallos_de_los_ultimos_15_minutos(): void
+    {
+        // Assert (spy): la ventana de tiempo empieza 15 minutos atrás
+        $this->bitacora->expects($this->once())
+            ->method('contarFallidosRecientes')
+            ->with('10.0.0.9', $this->callback(function (string $desde) {
+                $minutos = (time() - strtotime($desde)) / 60;
+                return $minutos >= 14.9 && $minutos <= 15.1;
+            }))
+            ->willReturn(0);
+        $this->usuarios->method('getByUsuario')->willReturn(false);
+
+        $this->auth->autenticar('x', 'y', '10.0.0.9', self::UA_WINDOWS);
     }
 
     public static function userAgents(): array
