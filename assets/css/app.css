@@ -759,3 +759,22 @@ a { text-decoration: none; }
     }
     .mg-nav-movil button i { font-size: 21px; }
 }
+
+/* =====================================================================
+   Modales sin saltos y con la sombra cubriendo toda la pantalla
+   ===================================================================== */
+
+/* El espacio de la barra ya está reservado (scrollbar-gutter), así que el
+   margen que Bootstrap agrega al abrir un modal sobraba y corría el contenido. */
+body.modal-open { padding-right: 0 !important; }
+
+/* La franja reservada para la barra no la cubre la sombra del modal: se
+   oscurece el fondo de la página con el mismo tono (negro al 50 % sobre el fondo). */
+html { background-color: var(--mg-fondo); transition: background-color .15s linear; }
+html:has(.modal-backdrop.show) { background-color: #7a7b7a; }
+
+/* Fechas del informe: siempre ocupan su lugar (así la página no cambia de alto
+   ni aparece la barra al cambiar de opción); atenuadas si no aplican. */
+.mg-fechas { transition: opacity .15s; }
+.mg-fechas.inactivas { opacity: .45; }
+.mg-fechas.inactivas .form-label { color: var(--mg-texto-tenue); }

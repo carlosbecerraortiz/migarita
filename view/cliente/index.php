@@ -8,6 +8,8 @@ $avisos = [
     'eliminado'  => 'Cliente eliminado.',
     'movimiento' => 'Movimiento registrado correctamente.',
 ];
+// Esta página abre un aviso al cargar (no se pudo eliminar / no existe)
+$modalAlCargar = in_array($_GET['error'] ?? '', ['saldo', 'notfound'], true);
 require __DIR__ . '/../layout/header.php';
 
 $conDeuda = count(array_filter($clientes, fn($c) => (float)$c['saldo'] > 0));

@@ -54,7 +54,8 @@ $hoy = date('Y-m-d');
                 </div>
             </div>
 
-            <div class="row g-3 mt-1" id="bloqueFechas" hidden>
+            <!-- Siempre visibles (la página no cambia de alto); solo se activan con "Entre fechas" -->
+            <div class="row g-3 mt-1 mg-fechas inactivas" id="bloqueFechas" aria-disabled="true">
                 <div class="col-sm-6">
                     <label for="desde" class="form-label">Desde</label>
                     <input type="date" name="desde" id="desde" class="form-control" max="<?= $hoy ?>" disabled required>

@@ -40,11 +40,17 @@
         });
     }
 
-    /** Muestra un mensaje de aviso/error en un modal. */
+    /**
+     * Muestra un mensaje de aviso/error en un modal. Si la página está entrando
+     * con una transición de vista, espera a que termine (evita el parpadeo de la
+     * sombra sobre el menú lateral).
+     */
     function aviso(titulo, texto) {
         document.getElementById("avisoTitulo").textContent = titulo;
         document.getElementById("avisoTexto").textContent = texto;
-        bootstrap.Modal.getOrCreateInstance(document.getElementById("modalAviso")).show();
+        (window.mgTransicionLista || Promise.resolve()).then(() => {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById("modalAviso")).show();
+        });
     }
 
     /** Reinicia la animación de entrada de las filas de una tabla (tras una búsqueda). */

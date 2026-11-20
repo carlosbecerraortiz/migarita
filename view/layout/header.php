@@ -31,6 +31,10 @@ $menu = [
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#15803d">
     <meta name="csrf-token" content="<?= e(Csrf::token()) ?>">
+    <?php if (!empty($modalAlCargar)): ?>
+    <!-- La página abre un aviso al cargar: se omite la transición para que no parpadee -->
+    <meta name="mg-modal-al-cargar" content="1">
+    <?php endif; ?>
     <title><?= e($titulo) ?> · MiGarita</title>
 
     <link href="<?= asset('img/favicon1.png') ?>" rel="icon">
@@ -42,8 +46,8 @@ $menu = [
 
     <link href="<?= asset('vendor/bootstrap/css/bootstrap.min.css') ?>" rel="stylesheet">
     <link href="<?= asset('vendor/bootstrap-icons/bootstrap-icons.css') ?>" rel="stylesheet">
-    <link href="<?= asset('css/app.css') ?>?v=8" rel="stylesheet">
-    <script src="<?= asset('js/entrada.js') ?>?v=8"></script>
+    <link href="<?= asset('css/app.css') ?>?v=10" rel="stylesheet">
+    <script src="<?= asset('js/entrada.js') ?>?v=10"></script>
 </head>
 <body data-session-id="<?= (int)$_SESSION['id'] ?>" data-session-rol="<?= e($rolSesion) ?>">
 <div class="mg-app">
