@@ -116,6 +116,27 @@ final class EmailServiceTest extends TestCase
     }
 
     #[Test]
+    public function sin_parametros_lee_la_configuracion_del_archivo_o_queda_deshabilitado(): void
+    {
+        // Arrange: constructor como lo usa la app (lee app/config/email_config.php si existe).
+        // El correo está apagado por la variable de entorno, así que nunca se envía nada.
+        putenv('MIGARITA_MAIL_ENABLED=0');
+        $fabricaLlamada = false;
+
+        // Act
+        $servicio = new EmailService(null, function () use (&$fabricaLlamada) {
+            $fabricaLlamada = true;
+            return $this->mailer;
+        });
+        $enviado = $servicio->enviarNotificacionMovimiento(self::CLIENTE, [], 'X');
+
+        // Assert
+        $this->assertFalse($servicio->estaHabilitado());
+        $this->assertFalse($enviado);
+        $this->assertFalse($fabricaLlamada, 'No debe crear el cliente SMTP si el correo está apagado.');
+    }
+
+    #[Test]
     public function con_la_variable_de_entorno_en_cero_no_se_envian_correos(): void
     {
         putenv('MIGARITA_MAIL_ENABLED=0');

@@ -83,6 +83,20 @@ final class UsuarioServiceTest extends TestCase
     }
 
     #[Test]
+    public function editar_con_un_correo_invalido_no_modifica_nada(): void
+    {
+        // Arrange
+        $this->usuarios->method('getByCedula')->willReturn(false);
+        $this->usuarios->expects($this->never())->method('update');
+
+        // Act
+        $error = $this->servicio->actualizar(5, ['correo' => 'sin-arroba'] + self::NUEVO, 1, 'superusuario');
+
+        // Assert
+        $this->assertSame('correo_invalido', $error);
+    }
+
+    #[Test]
     public function un_usuario_normal_puede_editar_su_propio_perfil_sin_cambiar_su_rol(): void
     {
         // Arrange: intenta auto-ascenderse enviando rol=superusuario

@@ -8,6 +8,12 @@
  * - Si existe la variable de entorno MIGARITA_DB_DSN (p. ej. "sqlite:C:/tmp/test.db"),
  *   se usa esa base; así las pruebas funcionales levantan la app contra una BD de prueba.
  */
+
+/** Error al conectar con la base de datos (p. ej. MySQL apagado). */
+class ConexionException extends RuntimeException
+{
+}
+
 class Database
 {
     private $host = "localhost";
@@ -30,17 +36,29 @@ class Database
             return;
         }
 
+        $this->conn = self::conectarMysql(
+            getenv('MIGARITA_DB_HOST') ?: $this->host,
+            getenv('MIGARITA_DB_PORT') ?: null,
+            $this->db,
+            $this->user,
+            $this->pass
+        );
+    }
+
+    /**
+     * Conexión a MySQL (XAMPP). Si falla lanza una excepción en vez de hacer die(),
+     * así el error se puede probar; index.php la captura y responde HTTP 500.
+     *
+     * @throws ConexionException "Error en la conexión: ..."
+     */
+    public static function conectarMysql(string $host, ?string $puerto, string $bd, string $user, string $pass): PDO
+    {
+        $dsn = "mysql:host=$host;" . ($puerto ? "port=$puerto;" : "") . "dbname=$bd;charset=utf8";
+
         try {
-            $this->conn = new PDO(
-                "mysql:host=" . $this->host . ";dbname=" . $this->db . ";charset=utf8",
-                $this->user,
-                $this->pass
-            );
-
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
+            return self::crearConexion($dsn, $user, $pass);
         } catch (PDOException $e) {
-            die("Error en la conexión: " . $e->getMessage());
+            throw new ConexionException("Error en la conexión: " . $e->getMessage(), 0, $e);
         }
     }
 

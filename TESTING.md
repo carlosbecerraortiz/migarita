@@ -5,8 +5,8 @@ Suite de pruebas automatizadas del Proyecto Integrador **MiGarita** (Ingeniería
 | Resumen | |
 |---|---|
 | Herramientas | PHPUnit 11.5 + Xdebug (cobertura) · Playwright (E2E) |
-| Total | **186 pruebas PHPUnit** (132 unitarias · 31 integración · 23 funcionales) + **3 E2E** |
-| Cobertura de líneas (capa de lógica) | **96,85 %** (492 de 508 líneas) — umbral mínimo exigido: 60 % |
+| Total | **192 pruebas PHPUnit** (134 unitarias · 35 integración · 23 funcionales) + **3 E2E** |
+| Cobertura de líneas (capa de lógica) | **100 %** (507 de 507 líneas) — umbral mínimo exigido: 60 % |
 | Prueba de fuego | 5 de 5 reglas de negocio saboteadas fueron detectadas (ver sección 6) |
 
 ---
@@ -66,8 +66,8 @@ Playwright levanta la app solo ([tests/E2E/servidor-e2e.php](tests/E2E/servidor-
 ```
                  ▲   E2E (Playwright)          3   flujo crítico en navegador real
                 ▲▲▲  Funcionales (HTTP)       23   app real + BD de prueba + códigos HTTP
-              ▲▲▲▲▲  Integración              31   modelos y casos de uso con SQLite
-          ▲▲▲▲▲▲▲▲▲  Unitarias (+ mocks)     132   validadores y servicios aislados
+              ▲▲▲▲▲  Integración              35   modelos, conexión y casos de uso con SQLite
+          ▲▲▲▲▲▲▲▲▲  Unitarias (+ mocks)     134   validadores y servicios aislados
 ```
 
 | Nivel | Archivo | Pruebas | Qué protege |
@@ -77,13 +77,14 @@ Playwright levanta la app solo ([tests/E2E/servidor-e2e.php](tests/E2E/servidor-
 | Unitaria | `tests/Unit/Validators/UsuarioValidatorTest.php` | 25 | Datos del usuario, contraseña ≥ 6 caracteres, roles válidos, duplicados |
 | Unitaria + **mocks** | `tests/Unit/Services/MovimientoServiceTest.php` | 7 | Registro de fiados/abonos con BD y correo simulados (stub + spy) |
 | Unitaria + **mocks** | `tests/Unit/Services/ClienteServiceTest.php` | 11 | Crear/editar cliente, **no eliminar con saldo**, total general |
-| Unitaria + **mocks** | `tests/Unit/Services/UsuarioServiceTest.php` | 14 | Permisos por rol, no quitarse el rol, no auto-eliminarse |
+| Unitaria + **mocks** | `tests/Unit/Services/UsuarioServiceTest.php` | 15 | Permisos por rol, no quitarse el rol, no auto-eliminarse |
 | Unitaria + **mocks** | `tests/Unit/Services/AuthServiceTest.php` | 13 | Login, registro en bitácora (spy), detección del sistema operativo |
-| Unitaria + **mocks** | `tests/Unit/Services/EmailServiceTest.php` | 5 | Correo al cliente con PHPMailer simulado, fallo de SMTP |
+| Unitaria + **mocks** | `tests/Unit/Services/EmailServiceTest.php` | 6 | Correo al cliente con PHPMailer simulado, fallo de SMTP |
 | Unitaria | `tests/Unit/Services/InformeServiceTest.php` | 8 | Rangos de fechas de los informes PDF (fecha "hoy" inyectada) |
 | Integración | `tests/Integration/ClienteModelTest.php` | 15 | SQL real: saldo = Σ montos, vista `vista_saldos`, filtros por fecha, cascada |
 | Integración | `tests/Integration/UserModelTest.php` | 9 | Usuarios, restricciones UNIQUE/CHECK, bitácora |
 | Integración | `tests/Integration/CasosDeUsoTest.php` | 7 | Flujo completo: crear cliente → fiar → abonar → saldar → eliminar |
+| Integración | `tests/Integration/DatabaseTest.php` | 4 | Conexión inyectada, BD de prueba por variable de entorno, error claro si MySQL está apagado |
 | Funcional | `tests/Functional/AppHttpTest.php` | 23 | Login, rutas, clientes, movimientos, permisos; HTTP 200/302/400/403/404/422 + persistencia |
 | E2E | `tests/E2E/flujo-fiado.spec.js` | 3 | Login, fiado con formato de monto en vivo, abono mayor rechazado |
 
@@ -96,6 +97,7 @@ Antes, toda la lógica vivía dentro de los controladores, mezclada con `$_POST`
 | Validaciones repetidas dentro de `guardar()` y `actualizar()` | Extraídas a **funciones puras** en `app/validators/` (`ClienteValidator`, `UsuarioValidator`, `MovimientoValidator`) |
 | Reglas de negocio en los controladores (saldo, permisos, abono ≤ deuda) | Extraídas a **servicios** en `app/services/` (`ClienteService`, `MovimientoService`, `UsuarioService`, `AuthService`, `InformeService`) |
 | `Database` creaba siempre una conexión MySQL fija | **Inyección de dependencias:** el constructor acepta un `PDO` (SQLite en las pruebas). También lee `MIGARITA_DB_DSN` para las pruebas funcionales |
+| Si MySQL fallaba, `Database` hacía `die()`, que detiene también a PHPUnit y no se puede probar | Lanza `ConexionException`; `index.php` la captura y responde **HTTP 500** con el mismo mensaje. El servidor se puede cambiar con `MIGARITA_DB_HOST` / `MIGARITA_DB_PORT` para simular un MySQL caído |
 | Los servicios hacían `new ClienteModel()` por dentro | Reciben sus modelos por el **constructor**, así se reemplazan por mocks |
 | `EmailService` creaba `PHPMailer` y leía un archivo de configuración | Recibe la configuración y una **fábrica** de PHPMailer, así se inyecta un mock y no se conecta a ningún SMTP |
 | `detectarSO()` e informes usaban la fecha del sistema | `InformeService` recibe la fecha de "hoy", así las pruebas son **repetibles** |
@@ -154,11 +156,11 @@ Cada regla se rompió a propósito en el código de producción y se volvió a c
 | Contraseña mínima de 6 caracteres | `PASSWORD_MIN = 6` por `5` en `UsuarioValidator` | 🔴 1 prueba falla |
 | Código HTTP al auto-eliminarse | `422` por `200` en `UserController::eliminarAjax` | 🔴 1 prueba falla |
 
-Al revertir cada cambio, la suite vuelve a **verde** (186/186).
+Al revertir cada cambio, la suite vuelve a **verde** (192/192).
 
 **Guion sugerido para la demo:**
 
-1. Ejecutar `composer test:coverage`: 186 pruebas en verde y cobertura de 96,85 %.
+1. Ejecutar `composer test:coverage`: 192 pruebas en verde y cobertura de 100 %.
 2. Abrir [app/validators/MovimientoValidator.php](app/validators/MovimientoValidator.php) y en `abonoSuperaSaldo` cambiar `>` por `>=`.
 3. Ejecutar `composer test`: la suite queda en 🔴 y falla, entre otras, *"un abono IGUAL al saldo (límite)"*.
 4. Revertir con `Ctrl+Z` y volver a ejecutar `composer test`: todo en ✅ verde.

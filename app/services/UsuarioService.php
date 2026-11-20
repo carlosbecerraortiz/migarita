@@ -130,20 +130,15 @@ class UsuarioService
      */
     private function verificadorDuplicados($idActual): callable
     {
-        return function (string $campo, string $valor) use ($idActual): bool {
-            switch ($campo) {
-                case 'cedula':
-                    $existe = $this->usuarios->getByCedula($valor);
-                    break;
-                case 'correo':
-                    $existe = $this->usuarios->getByCorreo($valor);
-                    break;
-                case 'usuario':
-                    $existe = $this->usuarios->getByUsuario($valor);
-                    break;
-                default:
-                    return false;
-            }
+        // Campo del formulario => método del modelo que lo busca.
+        $consultas = [
+            'cedula'  => 'getByCedula',
+            'correo'  => 'getByCorreo',
+            'usuario' => 'getByUsuario',
+        ];
+
+        return function (string $campo, string $valor) use ($idActual, $consultas): bool {
+            $existe = $this->usuarios->{$consultas[$campo]}($valor);
 
             if (!$existe) {
                 return false;

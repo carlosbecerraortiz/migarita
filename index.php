@@ -27,4 +27,10 @@ if (!preg_match('/^[A-Za-z]+$/', $method) || !is_callable([$controller, $method]
     die("No existe el método " . htmlspecialchars($method) . " en $controllerName");
 }
 
-($param !== null) ? $controller->$method($param) : $controller->$method();
+try {
+    ($param !== null) ? $controller->$method($param) : $controller->$method();
+} catch (ConexionException $e) {
+    // Base de datos no disponible (p. ej. MySQL apagado en XAMPP).
+    http_response_code(500);
+    die(htmlspecialchars($e->getMessage()));
+}
