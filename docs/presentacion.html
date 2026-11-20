@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pruebas MiGarita</title>
+<style>
+:root {
+    --verde: #11713f;
+    --verde-medio: #1f9d55;
+    --verde-claro: #e7f6ee;
+    --tinta: #14212b;
+    --suave: #56636f;
+    --borde: #dde3e8;
+    --fondo: #eef1f4;
+    --hoja: #ffffff;
+    --rojo: #c53030;
+    --rojo-claro: #fdecec;
+    --ambar: #b7791f;
+    --ambar-claro: #fdf5e3;
+    --azul: #1d4ed8;
+    --azul-claro: #e8eefc;
+    --codigo: #0f1720;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+    background: #1b2229;
+    color: var(--tinta);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    overflow: hidden;
+}
+
+/* Escenario 16:9 de 1280x720 que se escala a la ventana */
+#escenario {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 1280px; height: 720px;
+    transform-origin: center center;
+}
+.slide {
+    position: absolute; inset: 0;
+    background: var(--hoja);
+    padding: 54px 72px 60px;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+}
+.slide.activa { display: flex; }
+
+/* Encabezado de cada diapositiva */
+.cinta {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 15px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--verde);
+}
+.cinta .num {
+    display: inline-grid; place-items: center;
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--verde); color: #fff; font-size: 15px; letter-spacing: 0;
+}
+h1 { font-size: 40px; line-height: 1.15; margin: 10px 0 6px; letter-spacing: -.01em; }
+.bajada { font-size: 20px; color: var(--suave); margin: 0 0 24px; }
+
+.pie {
+    position: absolute; left: 72px; right: 72px; bottom: 22px;
+    display: flex; justify-content: space-between;
+    font-size: 13px; color: var(--suave);
+    border-top: 1px solid var(--borde); padding-top: 10px;
+}
+
+/* Utilidades */
+.columnas { display: grid; gap: 24px; flex: 1; min-height: 0; }
+.c2 { grid-template-columns: 1fr 1fr; }
+.c3 { grid-template-columns: repeat(3, 1fr); }
+.caja {
+    border: 1px solid var(--borde); border-radius: 14px; padding: 18px 22px;
+    background: #fbfcfd;
+}
+.caja h3 { margin: 0 0 10px; font-size: 19px; }
+.caja.mal { background: var(--rojo-claro); border-color: #f5c6c6; }
+.caja.mal h3 { color: var(--rojo); }
+.caja.bien { background: var(--verde-claro); border-color: #bfe6cf; }
+.caja.bien h3 { color: var(--verde); }
+ul.lista { margin: 0; padding-left: 20px; font-size: 17px; line-height: 1.5; }
+ul.lista li { margin-bottom: 6px; }
+code, .mono { font-family: Consolas, "Cascadia Mono", monospace; font-variant-ligatures: none; }
+code { background: #eef2f5; padding: 1px 6px; border-radius: 5px; font-size: .92em; }
+.etq { display: inline-block; font-size: 13px; font-weight: 700; padding: 2px 9px; border-radius: 999px; }
+.etq.v { background: var(--verde-claro); color: var(--verde); }
+.etq.r { background: var(--rojo-claro); color: var(--rojo); }
+.etq.a { background: var(--azul-claro); color: var(--azul); }
+.etq.m { background: var(--ambar-claro); color: var(--ambar); }
+
+table { width: 100%; border-collapse: collapse; font-size: 16px; align-self: start; }
+th { text-align: left; font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--suave); padding: 8px 10px; border-bottom: 2px solid var(--borde); }
+td { padding: 9px 10px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.total td { font-weight: 700; border-bottom: none; }
+
+/* ---------- Portada ---------- */
+.portada { background: linear-gradient(135deg, #0d5a32 0%, #11713f 55%, #1f9d55 100%); color: #fff; padding: 60px 72px; }
+.portada .cinta { color: #cdeedb; }
+.portada h1 { font-size: 54px; margin-top: 18px; }
+.portada .bajada { color: #d9f2e4; font-size: 22px; max-width: 900px; }
+.equipo { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: auto; }
+.persona { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); border-radius: 14px; padding: 16px 18px; }
+.persona .nombre { font-size: 18px; font-weight: 700; line-height: 1.25; }
+.persona .rol { font-size: 14px; color: #d9f2e4; margin-top: 6px; line-height: 1.35; }
+.marca-equipo { display: inline-block; background: #fff; color: var(--verde); font-weight: 800; padding: 6px 14px; border-radius: 999px; font-size: 16px; margin-bottom: 12px; }
+.portada .meta { margin-top: 18px; font-size: 15px; color: #d9f2e4; }
+
+/* ---------- Diagrama de capas ---------- */
+.capas { display: flex; flex-direction: column; gap: 10px; }
+.capa { border-radius: 10px; padding: 10px 14px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.capa b { font-size: 16px; }
+.capa span { font-size: 13.5px; color: var(--suave); text-align: right; }
+.capa.ctrl { background: #f1f3f6; border: 1px solid var(--borde); }
+.capa.serv { background: var(--azul-claro); border: 1px solid #c9d6f6; }
+.capa.val { background: var(--verde-claro); border: 1px solid #bfe6cf; }
+.capa.mod { background: var(--ambar-claro); border: 1px solid #f1dcae; }
+.flecha { text-align: center; color: var(--suave); font-size: 15px; line-height: 1; }
+
+/* ---------- Pirámide ---------- */
+.piramide { display: flex; flex-direction: column; align-items: center; gap: 8px; justify-content: center; }
+.nivel { color: #fff; border-radius: 8px; text-align: center; padding: 10px 8px; font-weight: 700; display: flex; justify-content: center; align-items: baseline; gap: 10px; }
+.nivel .cant { font-size: 26px; }
+.nivel .nom { font-size: 15px; font-weight: 600; opacity: .95; }
+.nivel.e2e { width: 34%; background: #6b7280; }
+.nivel.fun { width: 54%; background: #b7791f; }
+.nivel.int { width: 74%; background: #1d4ed8; }
+.nivel.uni { width: 96%; background: #11713f; }
+.nota-piramide { text-align: center; font-size: 14px; color: var(--suave); margin-top: 6px; }
+
+/* ---------- IA ---------- */
+.prompt { font-size: 15.5px; background: var(--codigo); color: #e6edf3; border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; font-style: italic; }
+.prompt::before { content: "› "; color: #3ccf7f; font-style: normal; font-weight: 700; }
+.correccion { display: grid; grid-template-columns: 34px 1fr; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--borde); font-size: 15.5px; line-height: 1.4; }
+.correccion:last-child { border-bottom: none; }
+.correccion .ico { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-weight: 800; font-size: 15px; }
+.correccion b { display: block; font-size: 16px; }
+
+/* ---------- Cobertura ---------- */
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+.kpi { border: 1px solid var(--borde); border-radius: 14px; padding: 14px 18px; }
+.kpi .e { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--suave); }
+.kpi .valor { font-size: 38px; font-weight: 800; color: var(--verde); line-height: 1.1; margin-top: 4px; }
+.kpi .d { font-size: 14px; color: var(--suave); }
+.kpi.destacado { border: 2px solid var(--verde-medio); background: var(--verde-claro); }
+.barra { position: relative; height: 12px; background: #e5e7eb; border-radius: 999px; }
+.barra i { position: absolute; inset: 0 auto 0 0; background: var(--verde-medio); border-radius: 999px; }
+.barra s { position: absolute; top: -4px; bottom: -4px; left: 60%; width: 2px; background: var(--tinta); opacity: .6; }
+
+/* ---------- Demo ---------- */
+.terminal { background: var(--codigo); color: #e6edf3; border-radius: 12px; padding: 14px 18px; font-size: 16px; line-height: 1.6; }
+.terminal .p { color: #3ccf7f; }
+.terminal .c { color: #8b98a5; }
+.terminal .ok { background: #1f9d55; color: #fff; padding: 0 6px; border-radius: 3px; }
+.terminal .ko { background: #c53030; color: #fff; padding: 0 6px; border-radius: 3px; }
+.pasos { counter-reset: paso; display: flex; flex-direction: column; gap: 10px; }
+.paso { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; font-size: 16.5px; line-height: 1.4; }
+.paso::before { counter-increment: paso; content: counter(paso); width: 30px; height: 30px; border-radius: 50%; background: var(--verde); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 15px; }
+
+/* ---------- Controles en pantalla ---------- */
+#controles {
+    position: fixed; bottom: 14px; right: 18px;
+    display: flex; gap: 8px; align-items: center;
+    font: 13px "Segoe UI", system-ui, sans-serif; color: #c9d1d9;
+    opacity: .35; transition: opacity .2s;
+}
+#controles:hover { opacity: 1; }
+#controles button {
+    background: #2b333b; color: #fff; border: 1px solid #3c4650; border-radius: 8px;
+    padding: 6px 12px; font-size: 14px; cursor: pointer;
+}
+#progreso { position: fixed; left: 0; bottom: 0; height: 4px; background: #3ccf7f; transition: width .25s; }
+#notas {
+    position: fixed; left: 0; right: 0; bottom: 0; max-height: 34vh; overflow: auto;
+    background: rgba(13,18,23,.96); color: #e6edf3; padding: 16px 24px 28px;
+    font-size: 16px; line-height: 1.5; display: none; border-top: 3px solid #3ccf7f;
+}
+#notas.visible { display: block; }
+#notas h4 { margin: 0 0 6px; color: #3ccf7f; font-size: 14px; text-transform: uppercase; letter-spacing: .06em; }
+.notas { display: none; }
+
+/* ---------- Impresión / PDF: una diapositiva por página ---------- */
+@page { size: 1280px 720px; margin: 0; }
+@media print {
+    body { background: #fff; overflow: visible; }
+    #escenario { position: static; transform: none !important; width: auto; height: auto; }
+    .slide { position: relative; display: flex !important; width: 1280px; height: 720px; page-break-after: always; break-after: page; }
+    #controles, #progreso, #notas { display: none !important; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+
+<div id="escenario">
+
+<!-- =============================================================== 1. PORTADA -->
+<section class="slide portada">
+    <div class="cinta">Ingeniería del Software II · Unidad 4 · Semana 15</div>
+    <h1>Suite de pruebas automatizadas<br>de MiGarita con IA</h1>
+    <p class="bajada">Pruebas unitarias con mocks, integración, funcionales y E2E sobre el aplicativo web de gestión de cartera de la cafetería.</p>
+
+    <div>
+        <span class="marca-equipo">UpecitosDev</span>
+    </div>
+
+    <div class="equipo">
+        <div class="persona">
+            <div class="nombre">Cristhian Manuel Rangel Perez</div>
+            <div class="rol">Project Manager &amp; Scrum Master</div>
+        </div>
+        <div class="persona">
+            <div class="nombre">Abraham de Jesus Tarazona Mora</div>
+            <div class="rol">Product Owner &amp; QA Lead</div>
+        </div>
+        <div class="persona">
+            <div class="nombre">Carlos Alberto Becerra Ortiz</div>
+            <div class="rol">Desarrollador 1 · Frontend / UI-UX Lead</div>
+        </div>
+        <div class="persona">
+            <div class="nombre">Joel Enrique Melendez Mendez</div>
+            <div class="rol">Desarrollador 2 · Backend &amp; Database Lead</div>
+        </div>
+    </div>
+    <div class="meta">Universidad Popular del Cesar — Seccional Aguachica · Docente: Ing. Edinson Mauricio Mendoza Espinel · 2026-2</div>
+
+    <div class="notas">
+        Presentar al equipo y el objetivo: construir una suite de pruebas automatizadas con apoyo de IA (Claude Code)
+        que alcance al menos 60 % de cobertura. Resultado: 192 pruebas PHPUnit + 3 E2E y 100 % de cobertura en la capa de lógica.
+    </div>
+</section>
+
+<!-- =============================================================== 2. ARQUITECTURA -->
+<section class="slide">
+    <div class="cinta"><span class="num">1</span> Arquitectura y Design for Testability</div>
+    <h1>Separamos la lógica para poder probarla</h1>
+    <p class="bajada">Antes todo vivía en los controladores. Ahora cada capa tiene una sola responsabilidad y sus dependencias se inyectan.</p>
+
+    <div class="columnas c2">
+        <div class="caja mal">
+            <h3>✗ Antes: código acoplado</h3>
+            <ul class="lista">
+                <li>Validaciones y reglas mezcladas con <code>$_POST</code>, <code>header()</code> y <code>exit</code></li>
+                <li>Los controladores hacían <code>new ClienteModel()</code> por dentro</li>
+                <li><code>Database</code> siempre se conectaba a MySQL y hacía <code>die()</code> al fallar</li>
+                <li><code>EmailService</code> creaba PHPMailer y leía la configuración él mismo</li>
+                <li>Imposible probar sin navegador, base de datos real y servidor de correo</li>
+            </ul>
+        </div>
+        <div class="caja bien" style="display:flex;flex-direction:column">
+            <h3>✓ Después: capas e inyección de dependencias</h3>
+            <div class="capas">
+                <div class="capa ctrl"><b>Controladores</b><span>delgados: request → servicio → redirección</span></div>
+                <div class="flecha">▼</div>
+                <div class="capa serv"><b>Servicios</b><span>ClienteService, MovimientoService, UsuarioService, AuthService…</span></div>
+                <div class="flecha">▼ dependencias por el constructor</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                    <div class="capa val"><b>Validadores</b><span>funciones puras</span></div>
+                    <div class="capa mod"><b>Modelos + PDO</b><span>inyectable</span></div>
+                </div>
+            </div>
+            <p style="font-size:15px;margin:12px 0 0;color:var(--suave)">En las pruebas: la BD se reemplaza por <b>SQLite en memoria</b> y el correo por un <b>mock</b>. Mismas URL y mensajes de error que antes.</p>
+        </div>
+    </div>
+
+    <div class="notas">
+        Refactorizaciones: (1) extracción de funciones puras a app/validators; (2) servicios en app/services que reciben
+        los modelos y el EmailService por el constructor; (3) Database acepta un PDO inyectado o la variable MIGARITA_DB_DSN
+        y lanza ConexionException en vez de die(); (4) EmailService recibe configuración y una fábrica de PHPMailer;
+        (5) InformeService recibe la fecha de "hoy" para que las pruebas sean repetibles.
+    </div>
+</section>
+
+<!-- =============================================================== 3. MAPA DE LA SUITE -->
+<section class="slide">
+    <div class="cinta"><span class="num">2</span> Mapa de la suite de pruebas</div>
+    <h1>195 pruebas organizadas en la pirámide</h1>
+    <p class="bajada">Muchas pruebas rápidas en la base y pocas pruebas grandes arriba.</p>
+
+    <div class="columnas" style="grid-template-columns: 0.9fr 1.1fr">
+        <div class="piramide">
+            <div class="nivel e2e"><span class="cant">3</span><span class="nom">E2E · Playwright</span></div>
+            <div class="nivel fun"><span class="cant">23</span><span class="nom">Funcionales · HTTP</span></div>
+            <div class="nivel int"><span class="cant">35</span><span class="nom">Integración · SQLite</span></div>
+            <div class="nivel uni"><span class="cant">134</span><span class="nom">Unitarias · con mocks</span></div>
+            <div class="nota-piramide">PHPUnit 11 + Xdebug · Playwright (Chromium)</div>
+        </div>
+        <table>
+            <thead><tr><th>Nivel</th><th>Qué protege</th><th class="n">Pruebas</th></tr></thead>
+            <tbody>
+                <tr><td><span class="etq v">Unitaria</span></td><td>Validadores: cédula, teléfono, correo, contraseña ≥ 6, roles, monto &gt; 0, abono ≤ saldo</td><td class="n">74</td></tr>
+                <tr><td><span class="etq v">Unit + mocks</span></td><td>Servicios: movimientos, clientes, permisos, login, correo, informes</td><td class="n">60</td></tr>
+                <tr><td><span class="etq a">Integración</span></td><td>SQL real: saldo = Σ montos, vista de saldos, filtros por fecha, flujo cliente → fiado → abono → eliminar</td><td class="n">35</td></tr>
+                <tr><td><span class="etq m">Funcional</span></td><td>App real por HTTP: códigos <b>200 · 302 · 400 · 403 · 404 · 422</b> y persistencia en la BD</td><td class="n">23</td></tr>
+                <tr><td><span class="etq">E2E</span></td><td>Navegador: login, fiado con formato de monto, abono mayor rechazado</td><td class="n">3</td></tr>
+                <tr class="total"><td>Total</td><td></td><td class="n">195</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="notas">
+        Todas las pruebas siguen el patrón AAA (Arrange, Act, Assert) y F.I.R.S.T.: cada prueba arranca con una BD nueva
+        en memoria y no depende de las demás. Incluyen caminos felices, valores límite (abono igual al saldo vs. un peso más,
+        contraseña de 5 vs. 6, monto 0 vs. 0,01, días en el borde del rango) y manejo de errores (SMTP caído, MySQL apagado).
+    </div>
+</section>
+
+<!-- =============================================================== 4. IA -->
+<section class="slide">
+    <div class="cinta"><span class="num">3</span> Estrategia con Inteligencia Artificial</div>
+    <h1>Claude Code generó, el equipo definió las reglas y auditó</h1>
+    <p class="bajada">Las aserciones verifican lo que el negocio exige, no lo que el código hacía.</p>
+
+    <div class="columnas" style="grid-template-columns: 1fr 1.15fr">
+        <div style="display:flex;flex-direction:column;gap:14px">
+            <div>
+                <div style="font-size:14px;font-weight:700;color:var(--suave);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Prompts reales</div>
+                <div class="prompt">Tengo que añadir esto a mi proyecto… <span style="opacity:.7">(+ guía del taller en PDF)</span></div>
+                <div class="prompt">Usemos el código actual funcional de PHP para implementar todo lo de las pruebas</div>
+                <div class="prompt">Sí, empieza con las pruebas</div>
+            </div>
+            <div class="caja" style="padding:14px 18px">
+                <h3 style="font-size:16px;margin-bottom:6px">Reglas que le dimos al agente</h3>
+                <ul class="lista" style="font-size:15px">
+                    <li>No cambiar el comportamiento: mismas URL y códigos de error</li>
+                    <li>AAA + F.I.R.S.T. y mocks obligatorios para BD y correo</li>
+                    <li>Siempre valores límite: abono = saldo ✓, saldo + 1 ✗</li>
+                    <li>Aserciones desde las reglas del negocio</li>
+                </ul>
+            </div>
+        </div>
+        <div class="caja" style="padding:12px 20px">
+            <h3 style="font-size:16px;margin:4px 0 2px">Casos reales donde corregimos</h3>
+            <div class="correccion">
+                <div class="ico" style="background:var(--rojo-claro);color:var(--rojo)">!</div>
+                <div><b>Test complaciente evitado</b>La bitácora registraba Android como "Linux" y iPhone como "Mac OS". Exigimos el valor correcto y se corrigió el código.</div>
+            </div>
+            <div class="correccion">
+                <div class="ico" style="background:var(--ambar-claro);color:var(--ambar)">✎</div>
+                <div><b>Dato de prueba mal escrito por la IA</b>Buscó la cédula parcial "206" para un cliente con cédula 2077. La prueba falló y se corrigió a "207".</div>
+            </div>
+            <div class="correccion">
+                <div class="ico" style="background:var(--azul-claro);color:var(--azul)">✉</div>
+                <div><b>Defecto encontrado con el mock</b>Con configuración vacía el correo igual intentaba enviarse. Ahora exige servidor SMTP.</div>
+            </div>
+            <div class="correccion">
+                <div class="ico" style="background:var(--verde-claro);color:var(--verde)">↯</div>
+                <div><b>Enrutador sin códigos HTTP</b>Una ruta inexistente respondía 200 y un método privado causaba error 500. Ahora responde 404.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notas">
+        Herramienta: Claude Code en VS Code. Los prompts y reglas completos están en TESTING.md, sección 5.
+        Mensaje clave: una prueba en rojo no siempre significa que el código esté mal (caso "206"), y una prueba en verde
+        no siempre significa que esté bien (caso Android/iPhone). Por eso el equipo revisó cada aserción.
+    </div>
+</section>
+
+<!-- =============================================================== 5. COBERTURA -->
+<section class="slide">
+    <div class="cinta"><span class="num">4</span> Evidencia del reporte de cobertura</div>
+    <h1>100 % de cobertura en la capa de lógica</h1>
+    <p class="bajada">Medido con Xdebug sobre <code>app/</code> y <code>model/</code>. El comando falla solo si baja del 60 %.</p>
+
+    <div class="kpis">
+        <div class="kpi destacado"><div class="e">Líneas</div><div class="valor">100 %</div><div class="d">507 de 507</div></div>
+        <div class="kpi"><div class="e">Métodos</div><div class="valor">100 %</div><div class="d">64 de 64</div></div>
+        <div class="kpi"><div class="e">Clases</div><div class="valor">100 %</div><div class="d">13 de 13</div></div>
+        <div class="kpi"><div class="e">Mínimo exigido</div><div class="valor" style="color:var(--tinta)">60 %</div><div class="d"><span class="etq v">✓ Cumple</span></div></div>
+    </div>
+
+    <div class="columnas" style="grid-template-columns: 1.05fr .95fr">
+        <table>
+            <thead><tr><th>Capa</th><th style="width:38%">Cobertura <span style="font-weight:400;text-transform:none;letter-spacing:0">(raya = 60 %)</span></th><th class="n">Líneas</th></tr></thead>
+            <tbody>
+                <tr><td><b>Validadores</b><br><span style="font-size:14px;color:var(--suave)">reglas de los formularios</span></td><td style="vertical-align:middle"><div class="barra"><i style="width:100%"></i><s></s></div></td><td class="n">101 / 101</td></tr>
+                <tr><td><b>Servicios</b><br><span style="font-size:14px;color:var(--suave)">saldos, permisos, login, correo</span></td><td style="vertical-align:middle"><div class="barra"><i style="width:100%"></i><s></s></div></td><td class="n">238 / 238</td></tr>
+                <tr><td><b>Modelos</b><br><span style="font-size:14px;color:var(--suave)">consultas SQL</span></td><td style="vertical-align:middle"><div class="barra"><i style="width:100%"></i><s></s></div></td><td class="n">168 / 168</td></tr>
+            </tbody>
+        </table>
+        <div class="caja">
+            <h3>Líneas críticas del negocio</h3>
+            <ul class="lista" style="font-size:15.5px">
+                <li><code>MovimientoValidator:55</code> un abono no puede superar la deuda</li>
+                <li><code>MovimientoValidator:63</code> los abonos se guardan negativos</li>
+                <li><code>ClienteService:73</code> no se elimina un cliente con saldo</li>
+                <li><code>UsuarioService</code> permisos por rol y auto-eliminación</li>
+                <li><code>ClienteModel</code> saldo = suma de montos y filtros por fecha</li>
+            </ul>
+            <p style="font-size:14px;color:var(--suave);margin:10px 0 0">Controladores y vistas: cubiertos por las pruebas funcionales y E2E (corren en otro proceso).</p>
+        </div>
+    </div>
+
+    <div class="notas">
+        Mostrar en vivo coverage/resumen.html (composer coverage:ver) y entrar a MovimientoValidator.php para ver las
+        líneas en verde. Aclarar: 100 % significa que cada línea se ejecutó en alguna prueba, no que no haya errores.
+        Lo que demuestra que las pruebas vigilan las reglas es la prueba de fuego de la siguiente diapositiva.
+    </div>
+</section>
+
+<!-- =============================================================== 6. DEMO EN VIVO -->
+<section class="slide">
+    <div class="cinta"><span class="num">5</span> Demostración en vivo · Prueba de fuego</div>
+    <h1>Si rompemos una regla, la suite se pone en rojo</h1>
+    <p class="bajada">Probamos 5 sabotajes: los 5 fueron detectados al instante.</p>
+
+    <div class="columnas" style="grid-template-columns: 1fr 1fr">
+        <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="pasos">
+                <div class="paso"><div><code>composer test:coverage</code> → todo en verde y 100 %</div></div>
+                <div class="paso"><div>En <code>MovimientoValidator.php:55</code> cambiar <code>&gt;</code> por <code>&gt;=</code></div></div>
+                <div class="paso"><div><code>composer test</code> → <b style="color:var(--rojo)">3 pruebas fallan</b>: "abono IGUAL al saldo"</div></div>
+                <div class="paso"><div>Revertir (<code>Ctrl+Z</code>) y <code>composer test</code> → verde otra vez</div></div>
+            </div>
+            <div class="terminal mono">
+                <span class="p">&gt;</span> composer test<br>
+                <span class="c">.....F..F..F......</span><br>
+                <span class="ko">FAILURES!</span> Tests: 192, Failures: 3.<br>
+                <span class="p">&gt;</span> composer test <span class="c"># después de revertir</span><br>
+                <span class="ok">OK (192 tests, 419 assertions)</span>
+            </div>
+        </div>
+        <table>
+            <thead><tr><th>Regla saboteada</th><th>Cambio</th><th class="n">Resultado</th></tr></thead>
+            <tbody>
+                <tr><td>Se puede pagar la deuda exacta</td><td><code>&gt;</code> → <code>&gt;=</code></td><td class="n"><span class="etq r">3 fallan</span></td></tr>
+                <tr><td>Los abonos restan deuda</td><td>quitar el signo <code>-</code></td><td class="n"><span class="etq r">6 fallan</span></td></tr>
+                <tr><td>No borrar clientes con saldo a favor</td><td><code>!= 0</code> → <code>&gt; 0</code></td><td class="n"><span class="etq r">1 falla</span></td></tr>
+                <tr><td>Contraseña mínima de 6</td><td><code>6</code> → <code>5</code></td><td class="n"><span class="etq r">1 falla</span></td></tr>
+                <tr><td>Auto-eliminarse responde 422</td><td><code>422</code> → <code>200</code></td><td class="n"><span class="etq r">1 falla</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="notas">
+        Ahora pasar al IDE. Antes de empezar: git status limpio. Pasos: (1) composer test:coverage; (2) explicar
+        MovimientoServiceTest (mocks: stub de getSaldo y spy de insertMovimiento/correo) y AppHttpTest
+        "registrar fiado y abono actualiza el saldo"; (3) prueba de fuego con el cambio de &gt; por &gt;=;
+        (4) revertir y volver a verde. Extra: npm run test:e2e:ver para mostrar el navegador.
+        Si algo queda roto: git restore .
+    </div>
+</section>
+
+</div>
+
+<div id="progreso"></div>
+<div id="notas"><h4>Notas del expositor</h4><div id="notas-texto"></div></div>
+<div id="controles">
+    <button type="button" id="ant" aria-label="Anterior">←</button>
+    <span id="contador">1 / 6</span>
+    <button type="button" id="sig" aria-label="Siguiente">→</button>
+    <button type="button" id="btn-notas" title="Notas (N)">Notas</button>
+    <button type="button" id="btn-full" title="Pantalla completa (F)">⛶</button>
+</div>
+
+<script>
+(function () {
+    var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+    var escenario = document.getElementById('escenario');
+    var contador = document.getElementById('contador');
+    var progreso = document.getElementById('progreso');
+    var panelNotas = document.getElementById('notas');
+    var textoNotas = document.getElementById('notas-texto');
+    var actual = 0;
+
+    function leerInicio() {
+        var n = parseInt((location.hash || '').replace('#', ''), 10);
+        return isNaN(n) ? 0 : Math.min(Math.max(n - 1, 0), slides.length - 1);
+    }
+
+    function mostrar(i) {
+        actual = Math.min(Math.max(i, 0), slides.length - 1);
+        slides.forEach(function (s, k) { s.classList.toggle('activa', k === actual); });
+        contador.textContent = (actual + 1) + ' / ' + slides.length;
+        progreso.style.width = ((actual + 1) / slides.length * 100) + '%';
+        var nota = slides[actual].querySelector('.notas');
+        textoNotas.textContent = nota ? nota.textContent.trim().replace(/\s+/g, ' ') : '';
+        if (history.replaceState) { history.replaceState(null, '', '#' + (actual + 1)); }
+    }
+
+    function escalar() {
+        var escala = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+        escenario.style.transform = 'translate(-50%, -50%) scale(' + escala + ')';
+    }
+
+    function pantallaCompleta() {
+        if (!document.fullscreenElement) {
+            (document.documentElement.requestFullscreen || function () {}).call(document.documentElement);
+        } else if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
+
+    document.addEventListener('keydown', function (e) {
+        var k = e.key;
+        if (k === 'ArrowRight' || k === 'PageDown' || k === ' ' || k === 'Enter') { e.preventDefault(); mostrar(actual + 1); }
+        else if (k === 'ArrowLeft' || k === 'PageUp' || k === 'Backspace') { e.preventDefault(); mostrar(actual - 1); }
+        else if (k === 'Home') { mostrar(0); }
+        else if (k === 'End') { mostrar(slides.length - 1); }
+        else if (k === 'f' || k === 'F') { pantallaCompleta(); }
+        else if (k === 'n' || k === 'N') { panelNotas.classList.toggle('visible'); }
+    });
+
+    document.getElementById('ant').onclick = function () { mostrar(actual - 1); };
+    document.getElementById('sig').onclick = function () { mostrar(actual + 1); };
+    document.getElementById('btn-notas').onclick = function () { panelNotas.classList.toggle('visible'); };
+    document.getElementById('btn-full').onclick = pantallaCompleta;
+
+    // Clic en la diapositiva: mitad derecha avanza, mitad izquierda retrocede
+    escenario.addEventListener('click', function (e) {
+        if (e.target.closest('a, button, code')) { return; }
+        mostrar(e.clientX > window.innerWidth / 2 ? actual + 1 : actual - 1);
+    });
+
+    window.addEventListener('hashchange', function () {
+        var i = leerInicio();
+        if (i !== actual) { mostrar(i); }
+    });
+    window.addEventListener('resize', escalar);
+    escalar();
+    mostrar(leerInicio());
+})();
+</script>
+</body>
+</html>

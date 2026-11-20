@@ -35,4 +35,4 @@ composer test:coverage   # cobertura (consola + HTML), falla si es menor al 60 %
 composer coverage:ver    # abre el resumen de cobertura en español
 ```
 
-Instrucciones completas, mapa de la suite, uso de IA y prueba de fuego en **[TESTING.md](TESTING.md)**.
+Instrucciones completas, mapa de la suite, uso de IA y prueba de fuego en **[TESTING.md](TESTING.md)**. Diapositivas de la sustentación: **[docs/presentacion.html](docs/presentacion.html)**.

@@ -170,3 +170,16 @@ Al revertir cada cambio, la suite vuelve a **verde** (192/192).
 2. Abrir [app/validators/MovimientoValidator.php](app/validators/MovimientoValidator.php) y en `abonoSuperaSaldo` cambiar `>` por `>=`.
 3. Ejecutar `composer test`: la suite queda en 🔴 y falla, entre otras, *"un abono IGUAL al saldo (límite)"*.
 4. Revertir con `Ctrl+Z` y volver a ejecutar `composer test`: todo en ✅ verde.
+
+## 7. Presentación para la sustentación
+
+Las diapositivas están en [docs/presentacion.html](docs/presentacion.html). Se abren con doble clic en cualquier navegador y no necesitan internet.
+
+| Tecla | Acción |
+|---|---|
+| `→` / `Espacio` / clic a la derecha | Siguiente diapositiva |
+| `←` / clic a la izquierda | Diapositiva anterior |
+| `F` | Pantalla completa |
+| `N` | Mostrar u ocultar las notas del expositor |
+
+Para exportarlas a PDF: `Ctrl+P` → *Guardar como PDF*. Sale una diapositiva por página.
