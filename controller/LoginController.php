@@ -2,6 +2,7 @@
 require_once __DIR__ . "/../model/UserModel.php";
 require_once __DIR__ . "/../model/BitacoraModel.php";
 require_once __DIR__ . "/../app/services/AuthService.php";
+require_once __DIR__ . "/../app/services/Flash.php";
 
 class LoginController
 {
@@ -28,7 +29,8 @@ class LoginController
         );
 
         if (!$resultado['ok']) {
-            header("Location: /mi_garita/index.php?url=login/index&error=" . $resultado['error']);
+            Flash::guardar(['error' => $resultado['error']]);
+            header("Location: /mi_garita/index.php?url=login/index");
             exit;
         }
 

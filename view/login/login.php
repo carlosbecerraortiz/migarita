@@ -24,7 +24,7 @@ $error = $_GET['error'] ?? '';
 
     <link href="<?= asset('vendor/bootstrap/css/bootstrap.min.css') ?>" rel="stylesheet">
     <link href="<?= asset('vendor/bootstrap-icons/bootstrap-icons.css') ?>" rel="stylesheet">
-    <link href="<?= asset('css/app.css') ?>?v=5" rel="stylesheet">
+    <link href="<?= asset('css/app.css') ?>?v=6" rel="stylesheet">
     <script>
         /* Si la página llega sin transición de vista, animar la entrada del contenido */
         (function (html) {
@@ -98,6 +98,6 @@ $error = $_GET['error'] ?? '';
 </main>
 
 <script src="<?= asset('vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
-<script src="<?= asset('js/login.js') ?>?v=5"></script>
+<script src="<?= asset('js/login.js') ?>?v=6"></script>
 </body>
 </html>

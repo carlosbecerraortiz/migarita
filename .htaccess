@@ -1,0 +1,47 @@
+# =====================================================================
+# MiGarita · Seguridad del servidor (Apache)
+#
+# Lista blanca: desde el navegador SOLO se puede acceder a
+#   - index.php   (punto de entrada de la app)
+#   - logout.php  (cerrar sesión)
+#   - assets/     (CSS, JS, imágenes y librerías del navegador)
+# Cualquier otra ruta (.git, migarita.sql, controller/, model/, view/,
+# app/, tests/, vendor/, node_modules/, coverage/, docs/, composer.json,
+# README.md, etc.) responde 404, como si no existiera.
+# =====================================================================
+
+# No listar el contenido de las carpetas
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Raíz del proyecto (/mi_garita/) -> la atiende index.php
+    RewriteRule ^$ - [L]
+
+    # Puntos de entrada permitidos
+    RewriteRule ^(index|logout)\.php$ - [L]
+
+    # Archivos estáticos permitidos, excepto archivos ocultos (.algo)
+    RewriteRule (^|/)\. - [R=404,L]
+    RewriteRule ^assets/.+\.(css|js|map|png|jpe?g|gif|svg|ico|webp|woff2?|ttf|eot|otf)$ - [L]
+
+    # Todo lo demás no existe
+    RewriteRule ^ - [R=404,L]
+</IfModule>
+
+# Si mod_rewrite no estuviera disponible, al menos bloquear lo más sensible
+<IfModule !mod_rewrite.c>
+    RedirectMatch 404 /\.git
+    RedirectMatch 404 \.(sql|md|json|lock|xml|log|sqlite)$
+    RedirectMatch 404 /(app|controller|model|view|tests|vendor|node_modules|coverage|docs)/
+</IfModule>
+
+<IfModule mod_headers.c>
+    # No enviar la URL completa (con sus parámetros) a otros sitios
+    Header always set Referrer-Policy "same-origin"
+    # No permitir que la app se muestre dentro de un iframe de otro sitio
+    Header always set X-Frame-Options "SAMEORIGIN"
+    # No adivinar tipos de archivo
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>

@@ -22,8 +22,8 @@ $hoy = date('Y-m-d');
 <div class="mg-form-layout">
 <section class="mg-tarjeta">
     <div class="mg-tarjeta-cuerpo">
-        <form method="GET" action="/mi_garita/index.php" id="formInforme">
-            <input type="hidden" name="url" value="cliente/generarInforme/<?= (int)$cliente['id'] ?>">
+        <!-- POST: el periodo y las fechas no quedan en la URL -->
+        <form method="POST" action="<?= url('cliente/generarInforme/' . (int)$cliente['id']) ?>" id="formInforme">
 
             <span class="form-label d-block mb-2">¿Qué periodo quieres incluir?</span>
             <div class="mg-opciones" role="radiogroup">

@@ -4,6 +4,7 @@ require_once __DIR__ . "/../model/UserModel.php";
 require_once __DIR__ . "/../app/services/ClienteService.php";
 require_once __DIR__ . "/../app/services/MovimientoService.php";
 require_once __DIR__ . "/../app/services/InformeService.php";
+require_once __DIR__ . "/../app/services/Flash.php";
 
 /**
  * Controlador de clientes. Solo se encarga de HTTP: leer el request, llamar al
@@ -23,10 +24,25 @@ class ClienteController
         }
     }
 
-    private function redirigir(string $ruta): void
+    /**
+     * Redirige a una URL limpia. El aviso (ok / error / monto) viaja por la
+     * sesión con Flash, nunca en la URL.
+     */
+    private function redirigir(string $ruta, array $aviso = []): void
     {
+        if ($aviso) {
+            Flash::guardar($aviso);
+        }
         header("Location: " . self::BASE . $ruta);
         exit;
+    }
+
+    /** Las acciones que modifican datos solo se aceptan por POST. */
+    private function exigirPost(string $volverA): void
+    {
+        if (($_SERVER["REQUEST_METHOD"] ?? "GET") !== "POST") {
+            $this->redirigir($volverA);
+        }
     }
 
     /** Devuelve (y borra) los datos de un formulario guardados en la sesión tras un error. */
@@ -46,15 +62,8 @@ class ClienteController
     public function index()
     {
         $clienteModel = new ClienteModel();
-
-        // Capturar búsqueda
-        $buscar = $_GET['buscar'] ?? '';
-
-        if ($buscar !== '') {
-            $clientes = $clienteModel->buscarConSaldo($buscar);
-        } else {
-            $clientes = $clienteModel->getAllConSaldo();
-        }
+        // La búsqueda se hace con buscarAjax (POST); nada se busca por la URL.
+        $clientes = $clienteModel->getAllConSaldo();
 
         // Calcular total de todas las deudas
         $totalGeneral = ClienteService::totalGeneral($clientes);
@@ -77,10 +86,10 @@ class ClienteController
         if ($error !== null) {
             // Lo escrito se guarda en la sesión (no en la URL) para no perderlo.
             $_SESSION['form_cliente'] = ClienteValidator::normalizar($_POST);
-            $this->redirigir("cliente/crear&error=$error");
+            $this->redirigir("cliente/crear", ['error' => $error]);
         }
 
-        $this->redirigir("cliente/index&ok=creado");
+        $this->redirigir("cliente/index", ['ok' => 'creado']);
     }
 
     public function editar($id)
@@ -89,7 +98,7 @@ class ClienteController
         $cliente = $clienteModel->getById($id);
 
         if (!$cliente) {
-            $this->redirigir("cliente/index&error=notfound");
+            $this->redirigir("cliente/index", ['error' => 'notfound']);
         }
 
         $tipos = $clienteModel->getTiposCliente();
@@ -107,30 +116,32 @@ class ClienteController
 
         if ($error !== null) {
             $_SESSION['form_cliente'] = ['id' => (string)$id] + ClienteValidator::normalizar($_POST);
-            $this->redirigir("cliente/editar/$id&error=$error");
+            $this->redirigir("cliente/editar/$id", ['error' => $error]);
         }
 
-        $this->redirigir("cliente/index&ok=editado");
+        $this->redirigir("cliente/index", ['ok' => 'editado']);
     }
 
     public function eliminar($id)
     {
+        $this->exigirPost("cliente/index");
+
         $resultado = $this->servicio()->eliminar($id);
 
         if ($resultado['ok']) {
-            $this->redirigir("cliente/index&ok=eliminado");
+            $this->redirigir("cliente/index", ['ok' => 'eliminado']);
         }
 
         if ($resultado['error'] === 'saldo') {
-            $this->redirigir("cliente/index&error=saldo&monto=" . $resultado['saldo']);
+            $this->redirigir("cliente/index", ['error' => 'saldo', 'monto' => $resultado['saldo']]);
         }
 
-        $this->redirigir("cliente/index&error=notfound");
+        $this->redirigir("cliente/index", ['error' => 'notfound']);
     }
 
     public function buscarAjax()
     {
-        $texto = $_GET["q"] ?? "";
+        $texto = (string)($_POST["q"] ?? "");
 
         $clienteModel = new ClienteModel();
         $clientes = $clienteModel->buscarConSaldo($texto);
@@ -147,7 +158,7 @@ class ClienteController
         $metodos = $clienteModel->getMetodosPago();
 
         if (!$cliente) {
-            $this->redirigir("cliente/index&error=notfound");
+            $this->redirigir("cliente/index", ['error' => 'notfound']);
         }
 
         $saldo = $clienteModel->getSaldo($id);
@@ -160,7 +171,13 @@ class ClienteController
     {
         header("Content-Type: application/json; charset=utf-8");
 
-        $resultado = $this->servicio()->eliminar($_GET['id'] ?? null);
+        if (($_SERVER["REQUEST_METHOD"] ?? "GET") !== "POST") {
+            http_response_code(405);
+            echo json_encode(["ok" => false, "msg" => "Método no permitido."]);
+            return;
+        }
+
+        $resultado = $this->servicio()->eliminar($_POST['id'] ?? null);
 
         if ($resultado['ok']) {
             echo json_encode(["ok" => true]);
@@ -189,13 +206,13 @@ class ClienteController
         $error = $servicio->registrar($idCliente, $_SESSION['id'], $_POST);
 
         if ($error !== null) {
-            $this->redirigir("cliente/deuda/$idCliente&error=$error");
+            $this->redirigir("cliente/deuda/$idCliente", ['error' => $error]);
         }
 
         // Limpiar variables temporales
         unset($_SESSION["mov_data"]);
 
-        $this->redirigir("cliente/index&ok=movimiento");
+        $this->redirigir("cliente/index", ['ok' => 'movimiento']);
     }
 
     public function seleccionarInforme($idCliente)
@@ -204,7 +221,7 @@ class ClienteController
         $cliente = $clienteModel->getById($idCliente);
 
         if (!$cliente) {
-            $this->redirigir("cliente/index&error=notfound");
+            $this->redirigir("cliente/index", ['error' => 'notfound']);
         }
 
         $saldo = $clienteModel->getSaldo($idCliente);
@@ -215,6 +232,9 @@ class ClienteController
 
     public function generarInforme($idCliente)
     {
+        // Las fechas del informe llegan por POST, no en la URL
+        $this->exigirPost("cliente/seleccionarInforme/" . (int)$idCliente);
+
         require_once __DIR__ . "/../vendor/autoload.php";
 
         $clienteModel = new ClienteModel();
@@ -223,11 +243,11 @@ class ClienteController
         $cliente = $clienteModel->getById($idCliente);
 
         if (!$cliente) {
-            $this->redirigir("cliente/index&error=notfound");
+            $this->redirigir("cliente/index", ['error' => 'notfound']);
         }
 
         // Determinar tipo de informe y rango de fechas
-        $rango = InformeService::rango($_GET['tipo'] ?? 'completo', $_GET['desde'] ?? null, $_GET['hasta'] ?? null);
+        $rango = InformeService::rango((string)($_POST['tipo'] ?? 'completo'), $_POST['desde'] ?? null, $_POST['hasta'] ?? null);
         $desde = $rango['desde'];
         $hasta = $rango['hasta'];
         $tituloInforme = $rango['titulo'];

@@ -30,9 +30,20 @@ tests/            pruebas: Unit, Integration, Functional, E2E
 ## Pruebas
 
 ```bash
-composer test            # 211 pruebas
+composer test            # 222 pruebas
 composer test:coverage   # cobertura (consola + HTML), falla si es menor al 60 %
 composer coverage:ver    # abre el resumen de cobertura en español
 ```
 
 Instrucciones completas, mapa de la suite, uso de IA y prueba de fuego en **[TESTING.md](TESTING.md)**. Diapositivas de la sustentación: **[docs/presentacion.html](docs/presentacion.html)**.
+
+## Seguridad
+
+- **Solo se publica lo necesario.** El [.htaccess](.htaccess) deja acceder únicamente a `index.php`, `logout.php` y `assets/`. Todo lo demás responde 404: `.git`, `migarita.sql`, el código PHP, `tests/`, `vendor/`, `node_modules/`, `coverage/`, `docs/`, `composer.json`, etc. También desactiva el listado de carpetas.
+- **Ningún dato viaja en la URL.** Los avisos de éxito o error se guardan en la sesión (`app/services/Flash.php`) y se muestran una sola vez. Las redirecciones van siempre a URLs limpias (`?url=cliente/index`). Un `?ok=` o `?error=` escrito a mano se ignora.
+- **Formularios con error.** Lo que se escribió vuelve desde la sesión, nunca por la URL. La contraseña no se guarda nunca.
+- **Acciones por POST.** Buscar, eliminar y generar informes se hacen por POST. Abrir una URL nunca borra datos, y lo que se busca no queda en el registro del servidor.
+- **Cabeceras.** `Referrer-Policy: same-origin` (la URL no se envía a otros sitios), `X-Frame-Options` y `X-Content-Type-Options`.
+- **Salida escapada.** Todos los datos que se muestran pasan por `e()` (`view/layout/helpers.php`).
+
+> Si la app se instala en otro servidor, Apache debe tener `AllowOverride All` y `mod_rewrite` activos para que el `.htaccess` funcione. XAMPP los trae activos.

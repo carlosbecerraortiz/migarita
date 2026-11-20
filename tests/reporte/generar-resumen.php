@@ -36,6 +36,7 @@ $descripciones = [
     'UsuarioService.php'      => 'Permisos por rol: quién puede crear, editar o eliminar usuarios.',
     'AuthService.php'         => 'Inicio de sesión y registro de cada intento en la bitácora.',
     'InformeService.php'      => 'Rangos de fechas y nombre de los informes PDF.',
+    'Flash.php'               => 'Avisos de un solo uso guardados en la sesión, para que nunca viajen en la URL.',
     'PanelService.php'        => 'Indicadores del panel de inicio: total adeudado, mayores deudores y movimientos del día.',
     'EmailService.php'        => 'Arma y envía el correo de notificación al cliente.',
     'Database.php'            => 'Conexión a la base de datos (MySQL en la app, SQLite en las pruebas).',

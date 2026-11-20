@@ -55,7 +55,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function buscar() {
-        fetch(`${URL_BASE}user/buscarAjax&q=${encodeURIComponent(input.value.trim())}`)
+        // POST: lo que se busca no queda en la URL ni en los registros del servidor
+        fetch(`${URL_BASE}user/buscarAjax`, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "q=" + encodeURIComponent(input.value.trim()),
+        })
             .then(res => res.json())
             .then(data => {
                 tabla.querySelectorAll("tr[data-id]").forEach(tr => tr.remove());
@@ -97,7 +102,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const datos = await res.json();
 
             if (datos.ok) {
-                window.location.href = `${URL_BASE}user/index&ok=eliminado`;
+                // El aviso "Usuario eliminado" ya quedó en la sesión del servidor
+                window.location.href = `${URL_BASE}user/index`;
                 return;
             }
             aviso("No se pudo eliminar", MENSAJES[datos.error] || "Ocurrió un error inesperado.");

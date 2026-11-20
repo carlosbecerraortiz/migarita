@@ -74,16 +74,24 @@
             history.replaceState(history.state, "", url.pathname + "?" + url.searchParams.toString().replace(/%2F/gi, "/"));
         }
 
-        // Enlaces que piden confirmación: <a data-confirmar="texto" href="...">
+        // Acciones que piden confirmación: <button data-confirmar="texto" data-accion="/ruta">
+        // Se envían por POST (nunca como un enlace que se pueda abrir o compartir).
         document.addEventListener("click", async e => {
-            const enlace = e.target.closest("[data-confirmar]");
-            if (!enlace) return;
+            const boton = e.target.closest("[data-confirmar]");
+            if (!boton) return;
             e.preventDefault();
             const ok = await confirmar({
-                titulo: enlace.dataset.titulo || "¿Eliminar?",
-                texto: enlace.dataset.confirmar,
+                titulo: boton.dataset.titulo || "¿Eliminar?",
+                texto: boton.dataset.confirmar,
             });
-            if (ok) window.location.href = enlace.getAttribute("href");
+            if (!ok) return;
+
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = boton.dataset.accion;
+            form.hidden = true;
+            document.body.appendChild(form);
+            form.submit();
         });
     });
 })();

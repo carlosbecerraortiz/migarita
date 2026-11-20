@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../model/UserModel.php";
 require_once __DIR__ . "/../app/services/UsuarioService.php";
+require_once __DIR__ . "/../app/services/Flash.php";
 
 /**
  * Controlador de usuarios del sistema. Las reglas de permisos y validaciones
@@ -18,8 +19,12 @@ class UserController
         }
     }
 
-    private function redirigir(string $ruta): void
+    /** Redirige a una URL limpia; el aviso viaja por la sesión (Flash), nunca en la URL. */
+    private function redirigir(string $ruta, array $aviso = []): void
     {
+        if ($aviso) {
+            Flash::guardar($aviso);
+        }
         header("Location: " . self::BASE . $ruta);
         exit;
     }
@@ -48,7 +53,7 @@ class UserController
     public function crear()
     {
         if (!UsuarioService::esSuperusuario($_SESSION['rol'] ?? null)) {
-            $this->redirigir("user/index&error=sin_permisos");
+            $this->redirigir("user/index", ['error' => 'sin_permisos']);
         }
 
         $datosPrevios = $this->tomarFormulario('form_usuario');
@@ -80,22 +85,22 @@ class UserController
         $error = $this->servicio()->crear($_POST, $_SESSION['rol'] ?? null);
 
         if ($error === 'sin_permisos') {
-            $this->redirigir("user/index&error=sin_permisos");
+            $this->redirigir("user/index", ['error' => 'sin_permisos']);
         }
 
         if ($error !== null) {
             // Lo escrito (sin la contraseña) se guarda en la sesión, no en la URL.
             $_SESSION['form_usuario'] = $this->datosSinClave($_POST);
-            $this->redirigir("user/crear&error=$error");
+            $this->redirigir("user/crear", ['error' => $error]);
         }
 
-        $this->redirigir("user/index&ok=creado");
+        $this->redirigir("user/index", ['ok' => 'creado']);
     }
 
     public function editar($id)
     {
         if (!UsuarioService::puedeEditar($_SESSION['id'], $_SESSION['rol'] ?? null, $id)) {
-            $this->redirigir("user/index&error=sin_permisos");
+            $this->redirigir("user/index", ['error' => 'sin_permisos']);
         }
 
         $userModel = new UserModel();
@@ -116,15 +121,15 @@ class UserController
         $error = $this->servicio()->actualizar($id, $_POST, $_SESSION['id'], $_SESSION['rol'] ?? null);
 
         if ($error === 'sin_permisos') {
-            $this->redirigir("user/index&error=sin_permisos");
+            $this->redirigir("user/index", ['error' => 'sin_permisos']);
         }
 
         if ($error !== null) {
             $_SESSION['form_usuario'] = ['id' => (string)$id] + $this->datosSinClave($_POST);
-            $this->redirigir("user/editar/$id&error=$error");
+            $this->redirigir("user/editar/$id", ['error' => $error]);
         }
 
-        $this->redirigir("user/index&ok=editado");
+        $this->redirigir("user/index", ['ok' => 'editado']);
     }
 
     public function eliminarAjax()
@@ -143,12 +148,16 @@ class UserController
             http_response_code($codigos[$resultado['error']] ?? 400);
         }
 
+        if (!empty($resultado['ok'])) {
+            Flash::guardar(['ok' => 'eliminado']);
+        }
+
         echo json_encode($resultado);
     }
 
     public function buscarAjax()
     {
-        $texto = $_GET["q"] ?? "";
+        $texto = (string)($_POST["q"] ?? "");
 
         $userModel = new UserModel();
         $usuarios = $userModel->buscar($texto);

@@ -68,9 +68,9 @@ $codigoOk = $_GET['ok'] ?? '';
 </div>
 
 <script src="<?= asset('vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
-<script src="<?= asset('js/app.js') ?>?v=5"></script>
+<script src="<?= asset('js/app.js') ?>?v=6"></script>
 <?php foreach ($scripts as $script): ?>
-    <script src="<?= asset('js/' . $script) ?>?v=5"></script>
+    <script src="<?= asset('js/' . $script) ?>?v=6"></script>
 <?php endforeach; ?>
 </body>
 </html>

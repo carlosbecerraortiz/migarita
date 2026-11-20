@@ -2,6 +2,16 @@
 session_start();
 date_default_timezone_set('America/Bogota');
 
+require_once __DIR__ . "/app/services/Flash.php";
+
+// Los avisos (ok / error / monto) llegan por la SESIÓN, nunca por la URL.
+// Se ignoran los que vengan escritos en la URL y se entregan a las vistas
+// en los mismos parámetros que ya leen ($_GET['ok'], $_GET['error']…).
+foreach (Flash::PERMITIDAS as $clave) {
+    unset($_GET[$clave]);
+}
+$_GET = Flash::tomar() + $_GET;
+
 $url = isset($_GET['url']) ? $_GET['url'] : 'login/index';
 
 $partes = explode('/', $url);

@@ -41,7 +41,7 @@ $menu = [
 
     <link href="<?= asset('vendor/bootstrap/css/bootstrap.min.css') ?>" rel="stylesheet">
     <link href="<?= asset('vendor/bootstrap-icons/bootstrap-icons.css') ?>" rel="stylesheet">
-    <link href="<?= asset('css/app.css') ?>?v=5" rel="stylesheet">
+    <link href="<?= asset('css/app.css') ?>?v=6" rel="stylesheet">
     <script>
         /* Si la página llega sin transición de vista, animar la entrada del contenido */
         (function (html) {

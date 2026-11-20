@@ -45,7 +45,7 @@ $alDia = count($clientes) - $conDeuda;
             <span class="visually-hidden">Buscar cliente</span>
             <i class="bi bi-search"></i>
             <input type="search" id="buscador" class="form-control" autocomplete="off"
-                   placeholder="Buscar por nombre, apellido o cédula" value="<?= e($_GET['buscar'] ?? '') ?>">
+                   placeholder="Buscar por nombre, apellido o cédula">
         </label>
         <div class="mg-filtros" role="group" aria-label="Filtrar por estado">
             <button type="button" class="mg-filtro activo" data-filtro="todos">Todos <span class="cuenta" data-cuenta="todos"><?= count($clientes) ?></span></button>
@@ -100,11 +100,11 @@ $alDia = count($clientes) - $conDeuda;
                                     <li><a class="dropdown-item" href="<?= url('cliente/seleccionarInforme/' . (int)$c['id']) ?>"><i class="bi bi-file-earmark-pdf"></i> Generar informe</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
-                                        <a class="dropdown-item peligro" href="<?= url('cliente/eliminar/' . (int)$c['id']) ?>"
+                                        <button type="button" class="dropdown-item peligro" data-accion="<?= url('cliente/eliminar/' . (int)$c['id']) ?>"
                                            data-titulo="¿Eliminar cliente?"
                                            data-confirmar="Se eliminará a <?= e($nombre) ?> y todo su historial. Esta acción no se puede deshacer.">
                                             <i class="bi bi-trash3"></i> Eliminar
-                                        </a>
+                                        </button>
                                     </li>
                                 </ul>
                             </div>

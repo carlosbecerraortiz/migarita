@@ -52,10 +52,10 @@ document.addEventListener("DOMContentLoaded", () => {
                             <li><a class="dropdown-item" href="${URL_BASE}cliente/editar/${id}"><i class="bi bi-pencil"></i> Editar datos</a></li>
                             <li><a class="dropdown-item" href="${URL_BASE}cliente/seleccionarInforme/${id}"><i class="bi bi-file-earmark-pdf"></i> Generar informe</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item peligro" href="${URL_BASE}cliente/eliminar/${id}"
+                            <li><button type="button" class="dropdown-item peligro" data-accion="${URL_BASE}cliente/eliminar/${id}"
                                    data-titulo="¿Eliminar cliente?"
                                    data-confirmar="Se eliminará a ${esc(nombre)} y todo su historial. Esta acción no se puede deshacer.">
-                                   <i class="bi bi-trash3"></i> Eliminar</a></li>
+                                   <i class="bi bi-trash3"></i> Eliminar</button></li>
                         </ul>
                     </div>
                 </div>
@@ -92,7 +92,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function buscar() {
         const texto = input.value.trim();
-        fetch(`${URL_BASE}cliente/buscarAjax&q=${encodeURIComponent(texto)}`)
+        // POST: lo que se busca (nombres, cédulas) no queda en la URL ni en los registros
+        fetch(`${URL_BASE}cliente/buscarAjax`, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "q=" + encodeURIComponent(texto),
+        })
             .then(res => res.json())
             .then(data => {
                 filas().forEach(tr => tr.remove());
@@ -117,7 +122,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    if (input.value.trim() !== "") buscar();
 
     // Error al eliminar (cliente con saldo o inexistente)
     const error = document.getElementById("errorEliminar");

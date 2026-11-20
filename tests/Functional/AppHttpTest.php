@@ -6,6 +6,7 @@ use PDO;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Tests\Support\BaseDatosPrueba;
+use Tests\Support\RespuestaHttp;
 use Tests\Support\ServidorPrueba;
 
 /**
@@ -56,6 +57,19 @@ final class AppHttpTest extends TestCase
         ], $cambios));
     }
 
+    /** La redirección va a una URL LIMPIA: solo la ruta, sin códigos de aviso ni datos. */
+    private function assertRedirigeLimpioA(string $ruta, RespuestaHttp $r): void
+    {
+        $this->assertSame(302, $r->estado);
+        $this->assertSame('/mi_garita/index.php?url=' . $ruta, $r->redirigeA());
+    }
+
+    /** Sigue la redirección como lo haría el navegador y devuelve la página destino. */
+    private function seguir(RespuestaHttp $r): RespuestaHttp
+    {
+        return self::$app->get($r->redirigeA());
+    }
+
     // ---------------------------------------------------------------- Login
 
     #[Test]
@@ -82,9 +96,9 @@ final class AppHttpTest extends TestCase
         // Act
         $r = self::$app->iniciarSesionComo('admin', 'clave-equivocada');
 
-        // Assert HTTP
-        $this->assertSame(302, $r->estado);
-        $this->assertStringContainsString('error=contrasena', $r->redirigeA());
+        // Assert HTTP: URL limpia y el mensaje se muestra en la página siguiente
+        $this->assertRedirigeLimpioA('login/index', $r);
+        $this->assertStringContainsString('La contraseña no es correcta', $this->seguir($r)->cuerpo);
 
         // Assert persistencia: intento fallido registrado
         $fila = $this->bd()->query('SELECT * FROM bitacora_login')->fetch(PDO::FETCH_ASSOC);
@@ -98,7 +112,8 @@ final class AppHttpTest extends TestCase
     {
         $r = self::$app->iniciarSesionComo('nadie', 'x');
 
-        $this->assertStringContainsString('error=usuario', $r->redirigeA());
+        $this->assertRedirigeLimpioA('login/index', $r);
+        $this->assertStringContainsString('No encontramos ese usuario', $this->seguir($r)->cuerpo);
     }
 
     #[Test]
@@ -174,11 +189,16 @@ final class AppHttpTest extends TestCase
     {
         $this->entrarComoAdmin();
 
+        // Cada aviso se usa una sola vez: se sigue cada redirección enseguida, como el navegador
         $editar = self::$app->get(self::URL . 'cliente/editar/99999');
+        $paginaEditar = $this->seguir($editar);
         $informe = self::$app->get(self::URL . 'cliente/seleccionarInforme/99999');
+        $paginaInforme = $this->seguir($informe);
 
-        $this->assertStringContainsString('error=notfound', $editar->redirigeA());
-        $this->assertStringContainsString('error=notfound', $informe->redirigeA());
+        $this->assertRedirigeLimpioA('cliente/index', $editar);
+        $this->assertStringContainsString('Cliente no encontrado', $paginaEditar->cuerpo);
+        $this->assertRedirigeLimpioA('cliente/index', $informe);
+        $this->assertStringContainsString('Cliente no encontrado', $paginaInforme->cuerpo);
     }
 
     #[Test]
@@ -253,8 +273,8 @@ final class AppHttpTest extends TestCase
 
         $r = $this->crearClienteHttp();
 
-        $this->assertSame(302, $r->estado);
-        $this->assertStringContainsString('ok=creado', $r->redirigeA());
+        $this->assertRedirigeLimpioA('cliente/index', $r);
+        $this->assertStringContainsString('Cliente registrado correctamente.', $this->seguir($r)->cuerpo);
         $cliente = $this->bd()->query("SELECT * FROM clientes WHERE cedula = '1065777666'")->fetch(PDO::FETCH_ASSOC);
         $this->assertSame('Valentina', $cliente['nombre']);
     }
@@ -267,14 +287,13 @@ final class AppHttpTest extends TestCase
 
         // Act
         $r = $this->crearClienteHttp(['telefono' => '300-ABC']);
-        $formulario = self::$app->get(self::URL . 'cliente/crear&error=telefono_invalido');
+        $formulario = $this->seguir($r);
         $recarga = self::$app->get(self::URL . 'cliente/crear');
 
-        // Assert: el error va en la URL, pero los datos personales NO (seguridad)
-        $this->assertSame(302, $r->estado);
-        $this->assertStringContainsString('error=telefono_invalido', $r->redirigeA());
-        $this->assertStringNotContainsString('Valentina', $r->redirigeA());
-        $this->assertStringNotContainsString('1065777666', $r->redirigeA());
+        // Assert: ni el error ni los datos personales viajan en la URL (seguridad)
+        $this->assertRedirigeLimpioA('cliente/crear', $r);
+        $this->assertStringContainsString('El teléfono solo puede contener números.', $formulario->cuerpo);
+        $this->assertStringNotContainsString('solo puede contener números', $recarga->cuerpo, 'El aviso no reaparece al recargar.');
 
         // El formulario recupera lo escrito (desde la sesión) una sola vez
         $this->assertStringContainsString('value="Valentina"', $formulario->cuerpo);
@@ -291,10 +310,10 @@ final class AppHttpTest extends TestCase
             'cedula' => '5555', 'nombre' => 'Sofía', 'apellido' => 'Ríos', 'correo' => 'no-es-correo',
             'usuario' => 'sofia', 'password' => 'Secreta123', 'rol' => 'usuario',
         ]);
-        $formulario = self::$app->get(self::URL . 'user/crear&error=correo_invalido');
+        $formulario = $this->seguir($r);
 
-        $this->assertStringContainsString('error=correo_invalido', $r->redirigeA());
-        $this->assertStringNotContainsString('sofia', $r->redirigeA());
+        $this->assertRedirigeLimpioA('user/crear', $r);
+        $this->assertStringContainsString('El correo no es válido.', $formulario->cuerpo);
         $this->assertStringContainsString('value="sofia"', $formulario->cuerpo, 'Recupera lo escrito.');
         $this->assertStringNotContainsString('Secreta123', $formulario->cuerpo, 'Nunca devuelve la contraseña.');
     }
@@ -308,7 +327,7 @@ final class AppHttpTest extends TestCase
         BaseDatosPrueba::crearMovimiento($this->bd(), $id, 6500);
 
         // Act
-        $r = self::$app->get(self::URL . 'cliente/buscarAjax&q=Laur');
+        $r = self::$app->post(self::URL . 'cliente/buscarAjax', ['q' => 'Laur']);
 
         // Assert
         $this->assertSame(200, $r->estado);
@@ -324,7 +343,8 @@ final class AppHttpTest extends TestCase
 
         $r = self::$app->get(self::URL . 'cliente/deuda/99999');
 
-        $this->assertStringContainsString('error=notfound', $r->redirigeA());
+        $this->assertRedirigeLimpioA('cliente/index', $r);
+        $this->assertStringContainsString('Cliente no encontrado', $this->seguir($r)->cuerpo);
     }
 
     // ---------------------------------------------------------------- Movimientos
@@ -340,13 +360,15 @@ final class AppHttpTest extends TestCase
         $fiado = self::$app->post(self::URL . "cliente/guardarMovimiento/$id", [
             'tipo' => 'fiado', 'monto' => '9000', 'descripcion' => 'Almuerzo',
         ]);
+        $paginaFiado = $this->seguir($fiado);
         $abono = self::$app->post(self::URL . "cliente/guardarMovimiento/$id", [
             'tipo' => 'abono', 'monto' => '4000', 'descripcion' => 'Pago', 'metodo_pago' => '1',
         ]);
 
         // Assert
-        $this->assertStringContainsString('ok=movimiento', $fiado->redirigeA());
-        $this->assertStringContainsString('ok=movimiento', $abono->redirigeA());
+        $this->assertRedirigeLimpioA('cliente/index', $fiado);
+        $this->assertStringContainsString('Movimiento registrado correctamente.', $paginaFiado->cuerpo);
+        $this->assertRedirigeLimpioA('cliente/index', $abono);
         $saldo = $this->bd()->query("SELECT saldo FROM vista_saldos WHERE id = $id")->fetchColumn();
         $this->assertEquals(5000, $saldo);
     }
@@ -362,7 +384,8 @@ final class AppHttpTest extends TestCase
             'tipo' => 'abono', 'monto' => '2001', 'descripcion' => 'Pago', 'metodo_pago' => '1',
         ]);
 
-        $this->assertStringContainsString("cliente/deuda/$id&error=abono_mayor", $r->redirigeA());
+        $this->assertRedirigeLimpioA("cliente/deuda/$id", $r);
+        $this->assertStringContainsString('no puede ser mayor que lo que debe', $this->seguir($r)->cuerpo);
         $this->assertSame(1, (int)$this->bd()->query('SELECT COUNT(*) FROM deudas')->fetchColumn());
     }
 
@@ -375,7 +398,7 @@ final class AppHttpTest extends TestCase
         $id = BaseDatosPrueba::crearCliente($this->bd());
         BaseDatosPrueba::crearMovimiento($this->bd(), $id, 3500);
 
-        $r = self::$app->get(self::URL . "cliente/eliminarAjax&id=$id");
+        $r = self::$app->post(self::URL . 'cliente/eliminarAjax', ['id' => $id]);
 
         $this->assertSame(422, $r->estado);
         $this->assertFalse($r->json()['ok']);
@@ -388,7 +411,7 @@ final class AppHttpTest extends TestCase
     {
         $this->entrarComoAdmin();
 
-        $r = self::$app->get(self::URL . 'cliente/eliminarAjax&id=99999');
+        $r = self::$app->post(self::URL . 'cliente/eliminarAjax', ['id' => 99999]);
 
         $this->assertSame(404, $r->estado);
     }
@@ -399,7 +422,7 @@ final class AppHttpTest extends TestCase
         $this->entrarComoAdmin();
         $id = BaseDatosPrueba::crearCliente($this->bd());
 
-        $r = self::$app->get(self::URL . "cliente/eliminarAjax&id=$id");
+        $r = self::$app->post(self::URL . 'cliente/eliminarAjax', ['id' => $id]);
 
         $this->assertSame(200, $r->estado);
         $this->assertSame(['ok' => true], $r->json());
@@ -415,8 +438,8 @@ final class AppHttpTest extends TestCase
 
         $r = self::$app->get(self::URL . 'user/crear');
 
-        $this->assertSame(302, $r->estado);
-        $this->assertStringContainsString('error=sin_permisos', $r->redirigeA());
+        $this->assertRedirigeLimpioA('user/index', $r);
+        $this->assertStringContainsString('Solo un superusuario puede hacer esa acción.', $this->seguir($r)->cuerpo);
     }
 
     #[Test]
@@ -448,6 +471,95 @@ final class AppHttpTest extends TestCase
         $this->entrarComoAdmin();
 
         $this->assertSame(400, self::$app->post(self::URL . 'user/eliminarAjax')->estado);
+    }
+
+    // ---------------------------------------------------------------- URLs sin datos
+
+    #[Test]
+    public function no_se_pueden_falsificar_avisos_escribiendolos_en_la_url(): void
+    {
+        // Un enlace malicioso con "?ok=..." o "?error=saldo&monto=..." no debe mostrar nada
+        $this->entrarComoAdmin();
+
+        $r = self::$app->get(self::URL . 'cliente/index&ok=creado&error=saldo&monto=999999');
+
+        $this->assertSame(200, $r->estado);
+        $this->assertStringNotContainsString('Cliente registrado correctamente.', $r->cuerpo);
+        $this->assertStringNotContainsString('999.999', $r->cuerpo);
+    }
+
+    #[Test]
+    public function eliminar_un_cliente_con_un_enlace_get_no_hace_nada(): void
+    {
+        // Abrir una URL nunca debe borrar datos
+        $this->entrarComoAdmin();
+        $id = BaseDatosPrueba::crearCliente($this->bd());
+
+        $r = self::$app->get(self::URL . "cliente/eliminar/$id");
+
+        $this->assertRedirigeLimpioA('cliente/index', $r);
+        $this->assertNotFalse($this->bd()->query("SELECT id FROM clientes WHERE id = $id")->fetchColumn());
+    }
+
+    #[Test]
+    public function eliminar_un_cliente_al_dia_por_post_lo_borra_y_avisa_sin_datos_en_la_url(): void
+    {
+        $this->entrarComoAdmin();
+        $id = BaseDatosPrueba::crearCliente($this->bd());
+
+        $r = self::$app->post(self::URL . "cliente/eliminar/$id");
+
+        $this->assertRedirigeLimpioA('cliente/index', $r);
+        $this->assertStringContainsString('Cliente eliminado.', $this->seguir($r)->cuerpo);
+        $this->assertFalse($this->bd()->query("SELECT id FROM clientes WHERE id = $id")->fetchColumn());
+    }
+
+    #[Test]
+    public function eliminar_un_cliente_que_debe_avisa_el_saldo_sin_ponerlo_en_la_url(): void
+    {
+        $this->entrarComoAdmin();
+        $id = BaseDatosPrueba::crearCliente($this->bd());
+        BaseDatosPrueba::crearMovimiento($this->bd(), $id, 4500);
+
+        $r = self::$app->post(self::URL . "cliente/eliminar/$id");
+        $pagina = $this->seguir($r);
+        $recarga = self::$app->get(self::URL . 'cliente/index');
+
+        $this->assertRedirigeLimpioA('cliente/index', $r);
+        $this->assertStringContainsString('saldo pendiente de $ 4.500', $pagina->cuerpo);
+        $this->assertStringNotContainsString('saldo pendiente', $recarga->cuerpo, 'El aviso no reaparece al recargar.');
+    }
+
+    #[Test]
+    public function eliminar_ajax_por_get_responde_405(): void
+    {
+        $this->entrarComoAdmin();
+
+        $this->assertSame(405, self::$app->get(self::URL . 'cliente/eliminarAjax&id=1')->estado);
+    }
+
+    #[Test]
+    public function el_informe_no_acepta_parametros_en_la_url(): void
+    {
+        $this->entrarComoAdmin();
+        $id = BaseDatosPrueba::crearCliente($this->bd());
+
+        $r = self::$app->get(self::URL . "cliente/generarInforme/$id&tipo=fechas&desde=2026-01-01&hasta=2026-12-31");
+
+        $this->assertRedirigeLimpioA("cliente/seleccionarInforme/$id", $r);
+    }
+
+    #[Test]
+    public function el_buscador_ignora_lo_que_venga_en_la_url(): void
+    {
+        // La búsqueda solo se lee del cuerpo POST; un ?q= en la URL no filtra nada
+        $this->entrarComoAdmin();
+        BaseDatosPrueba::crearCliente($this->bd(), ['cedula' => '1', 'nombre' => 'Laura']);
+        BaseDatosPrueba::crearCliente($this->bd(), ['cedula' => '2', 'nombre' => 'Pedro']);
+
+        $r = self::$app->post(self::URL . 'cliente/buscarAjax&q=Laura', []);
+
+        $this->assertCount(2, $r->json());
     }
 
     #[Test]
