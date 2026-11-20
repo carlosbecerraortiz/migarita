@@ -19,7 +19,8 @@ $hoy = date('Y-m-d');
     </div>
 </div>
 
-<section class="mg-tarjeta" style="max-width: 820px">
+<div class="mg-form-layout">
+<section class="mg-tarjeta">
     <div class="mg-tarjeta-cuerpo">
         <form method="GET" action="/mi_garita/index.php" id="formInforme">
             <input type="hidden" name="url" value="cliente/generarInforme/<?= (int)$cliente['id'] ?>">
@@ -63,6 +64,16 @@ $hoy = date('Y-m-d');
                 </div>
             </div>
 
+            <div class="mg-form-seccion mt-4 pt-4" style="border-top: 1px solid var(--mg-borde)">
+                <h3>Qué incluye el PDF</h3>
+                <p>Un documento listo para imprimir o enviar al cliente.</p>
+                <ul class="mg-ayuda" style="grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));">
+                    <li><i class="bi bi-arrow-up-right"></i><div><b>Fiados</b>Fecha, descripción, monto y quién lo registró.</div></li>
+                    <li><i class="bi bi-arrow-down-left"></i><div><b>Abonos</b>Fecha, monto y método de pago.</div></li>
+                    <li><i class="bi bi-wallet2"></i><div><b>Saldo actual</b>Lo que debe al momento de generarlo.</div></li>
+                </ul>
+            </div>
+
             <div class="mg-form-acciones">
                 <a href="<?= url('cliente/index') ?>" class="btn btn-claro">Cancelar</a>
                 <button type="submit" class="btn btn-primary"><i class="bi bi-file-earmark-arrow-down"></i> Descargar PDF</button>
@@ -70,5 +81,10 @@ $hoy = date('Y-m-d');
         </form>
     </div>
 </section>
+
+    <aside class="mg-lateral" aria-label="Estado de cuenta">
+        <?php require __DIR__ . "/../cliente/_resumen.php"; ?>
+    </aside>
+</div>
 
 <?php require __DIR__ . '/../layout/footer.php'; ?>

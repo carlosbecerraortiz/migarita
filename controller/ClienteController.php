@@ -77,7 +77,14 @@ class ClienteController
     {
         $clienteModel = new ClienteModel();
         $cliente = $clienteModel->getById($id);
+
+        if (!$cliente) {
+            $this->redirigir("cliente/index&error=notfound");
+        }
+
         $tipos = $clienteModel->getTiposCliente();
+        $saldo = $clienteModel->getSaldo($id);
+        $historial = $clienteModel->getUltimosMovimientos(4, (int)$id);
 
         require __DIR__ . "/../view/cliente/editar.php";
     }
@@ -182,6 +189,13 @@ class ClienteController
     {
         $clienteModel = new ClienteModel();
         $cliente = $clienteModel->getById($idCliente);
+
+        if (!$cliente) {
+            $this->redirigir("cliente/index&error=notfound");
+        }
+
+        $saldo = $clienteModel->getSaldo($idCliente);
+        $historial = $clienteModel->getUltimosMovimientos(4, (int)$idCliente);
 
         require __DIR__ . "/../view/informes/seleccionar_informe.php";
     }

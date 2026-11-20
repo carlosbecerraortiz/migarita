@@ -1,7 +1,7 @@
 <?php
 $titulo = 'Nuevo usuario';
 $seccion = 'usuarios';
-$scripts = ['togglePasswordCrear.js'];
+$scripts = ['togglePasswordCrear.js', 'vista-previa.js'];
 require __DIR__ . '/../layout/header.php';
 
 $datos = [
@@ -25,10 +25,14 @@ $textoBoton = 'Crear usuario';
     </div>
 </div>
 
-<section class="mg-tarjeta" style="max-width: 820px">
-    <div class="mg-tarjeta-cuerpo">
-        <?php require __DIR__ . '/_form.php'; ?>
-    </div>
-</section>
+<div class="mg-form-layout">
+    <section class="mg-tarjeta">
+        <div class="mg-tarjeta-cuerpo">
+            <?php require __DIR__ . '/_form.php'; ?>
+        </div>
+    </section>
+
+    <?php require __DIR__ . '/_lateral.php'; ?>
+</div>
 
 <?php require __DIR__ . '/../layout/footer.php'; ?>

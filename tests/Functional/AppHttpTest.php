@@ -170,6 +170,38 @@ final class AppHttpTest extends TestCase
     }
 
     #[Test]
+    public function editar_e_informe_de_un_cliente_inexistente_redirigen_con_notfound(): void
+    {
+        $this->entrarComoAdmin();
+
+        $editar = self::$app->get(self::URL . 'cliente/editar/99999');
+        $informe = self::$app->get(self::URL . 'cliente/seleccionarInforme/99999');
+
+        $this->assertStringContainsString('error=notfound', $editar->redirigeA());
+        $this->assertStringContainsString('error=notfound', $informe->redirigeA());
+    }
+
+    #[Test]
+    public function editar_e_informe_muestran_el_estado_de_cuenta_del_cliente(): void
+    {
+        // Arrange: Laura debe 6.000
+        $this->entrarComoAdmin();
+        $id = BaseDatosPrueba::crearCliente($this->bd(), ['nombre' => 'Laura']);
+        BaseDatosPrueba::crearMovimiento($this->bd(), $id, 6000);
+
+        // Act
+        $editar = self::$app->get(self::URL . "cliente/editar/$id");
+        $informe = self::$app->get(self::URL . "cliente/seleccionarInforme/$id");
+
+        // Assert
+        foreach ([$editar, $informe] as $r) {
+            $this->assertSame(200, $r->estado);
+            $this->assertStringContainsString('Estado de cuenta', $r->cuerpo);
+            $this->assertStringContainsString('$ 6.000', $r->cuerpo);
+        }
+    }
+
+    #[Test]
     public function los_nombres_se_escapan_para_evitar_inyeccion_de_html(): void
     {
         // Un nombre con HTML guardado directo en la BD no debe ejecutarse en la página

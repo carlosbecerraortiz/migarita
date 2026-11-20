@@ -55,11 +55,6 @@ $error = $_GET['error'] ?? '';
                     <li><i class="bi bi-envelope"></i> <?= e($cliente['correo']) ?></li>
                 <?php endif; ?>
             </ul>
-
-            <div class="botones">
-                <a href="<?= url('cliente/editar/' . (int)$cliente['id']) ?>" class="btn btn-sm btn-claro"><i class="bi bi-pencil"></i> Editar</a>
-                <a href="<?= url('cliente/seleccionarInforme/' . (int)$cliente['id']) ?>" class="btn btn-sm btn-claro"><i class="bi bi-file-earmark-pdf"></i> Informe</a>
-            </div>
         </div>
 
         <div class="mg-tarjeta mg-historial">

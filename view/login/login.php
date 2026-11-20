@@ -24,7 +24,7 @@ $error = $_GET['error'] ?? '';
 
     <link href="<?= asset('vendor/bootstrap/css/bootstrap.min.css') ?>" rel="stylesheet">
     <link href="<?= asset('vendor/bootstrap-icons/bootstrap-icons.css') ?>" rel="stylesheet">
-    <link href="<?= asset('css/app.css') ?>?v=3" rel="stylesheet">
+    <link href="<?= asset('css/app.css') ?>?v=4" rel="stylesheet">
 </head>
 <body>
 <main class="mg-login">
@@ -91,6 +91,6 @@ $error = $_GET['error'] ?? '';
 </main>
 
 <script src="<?= asset('vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
-<script src="<?= asset('js/login.js') ?>?v=3"></script>
+<script src="<?= asset('js/login.js') ?>?v=4"></script>
 </body>
 </html>

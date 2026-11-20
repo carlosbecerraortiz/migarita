@@ -41,7 +41,7 @@ $menu = [
 
     <link href="<?= asset('vendor/bootstrap/css/bootstrap.min.css') ?>" rel="stylesheet">
     <link href="<?= asset('vendor/bootstrap-icons/bootstrap-icons.css') ?>" rel="stylesheet">
-    <link href="<?= asset('css/app.css') ?>?v=3" rel="stylesheet">
+    <link href="<?= asset('css/app.css') ?>?v=4" rel="stylesheet">
 </head>
 <body data-session-id="<?= (int)$_SESSION['id'] ?>" data-session-rol="<?= e($rolSesion) ?>">
 <div class="mg-app">

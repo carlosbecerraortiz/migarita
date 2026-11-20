@@ -635,8 +635,11 @@ a { text-decoration: none; }
 
 @keyframes mg-vista-sale  { to   { opacity: 0; } }
 @keyframes mg-vista-entra { from { opacity: 0; transform: translateY(6px); } }
-@keyframes mg-aparecer    { from { opacity: 0; transform: translateY(-4px); } }
-@keyframes mg-menu-abre   { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+/* Se usa la propiedad `translate` (no `transform`) para no pisar la posición que
+   Bootstrap/Popper calcula con transform en los menús desplegables. */
+@keyframes mg-aparecer    { from { opacity: 0; translate: 0 -4px; } }
+@keyframes mg-menu-abre   { from { opacity: 0; translate: 0 -4px; } }
+@keyframes mg-fila-aparece { from { opacity: 0; } }
 
 @media (prefers-reduced-motion: no-preference) {
     @view-transition { navigation: auto; }
@@ -659,13 +662,14 @@ a { text-decoration: none; }
     }
 
     /* Detalles dentro de la página */
-    .dropdown-menu.show { animation: mg-menu-abre 120ms ease-out; transform-origin: top right; }
+    .dropdown-menu.show { animation: mg-menu-abre 120ms ease-out; }
     #bloqueMetodo:not([hidden]),
     #bloqueFechas:not([hidden]),
     #avisoAbono:not([hidden]),
     #pagarTodo:not([hidden]),
     .alert { animation: mg-aparecer 160ms ease-out; }
-    .mg-tabla tbody.refrescada tr { animation: mg-aparecer 140ms ease-out both; }
+    /* Solo opacidad y sin "fill": así las filas no quedan como capas que tapen el menú */
+    .mg-tabla tbody.refrescada tr { animation: mg-fila-aparece 140ms ease-out; }
 
     .mg-tarjeta, .btn, .mg-filtro, .mg-chip, .mg-nav a { transition: background-color .15s, border-color .15s, color .15s, box-shadow .15s; }
 }
@@ -673,3 +677,63 @@ a { text-decoration: none; }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
 }
+
+/* La fila con el menú de acciones abierto queda siempre por encima de las demás */
+.mg-tabla tr:has(.dropdown-menu.show) { position: relative; z-index: 30; }
+.mg-tabla .dropdown-menu { z-index: 1050; }
+
+/* =====================================================================
+   Formularios a dos columnas: formulario + columna lateral útil
+   ===================================================================== */
+
+.mg-form-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 20px;
+    align-items: start;
+}
+.mg-lateral { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 24px; }
+@media (max-width: 1199.98px) {
+    .mg-form-layout { grid-template-columns: 1fr; }
+    .mg-lateral { position: static; }
+    .mg-solo-pc { display: none !important; }
+}
+
+.mg-lateral h2 { font-size: 15px; font-weight: 700; margin: 0 0 12px; }
+.mg-lateral .mg-tarjeta-cuerpo { padding: 20px; }
+
+/* Vista previa del cliente/usuario mientras se escribe */
+.mg-previa { text-align: center; padding: 24px 20px; }
+.mg-previa .mg-avatar { margin: 0 auto 12px; }
+.mg-previa .nombre { font-size: 18px; font-weight: 800; min-height: 27px; }
+.mg-previa .sub { color: var(--mg-texto-suave); font-size: 13.5px; min-height: 20px; }
+.mg-previa .mg-etiqueta { margin-top: 10px; }
+.mg-previa .vacio { color: var(--mg-texto-tenue); font-weight: 600; }
+
+/* Lista de pasos / ayudas */
+.mg-ayuda { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; font-size: 14px; }
+.mg-ayuda li { display: grid; grid-template-columns: 32px 1fr; gap: 10px; align-items: start; color: var(--mg-texto-suave); }
+.mg-ayuda li b { display: block; color: var(--mg-texto); font-size: 14px; }
+.mg-ayuda i {
+    width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center;
+    background: var(--mg-verde-suave); color: var(--mg-verde); font-size: 15px;
+}
+
+/* Saldo compacto en la columna lateral */
+.mg-saldo-lateral {
+    border-radius: 12px; padding: 14px 16px; background: var(--mg-deuda-suave);
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+}
+.mg-saldo-lateral.al-dia { background: var(--mg-verde-suave); }
+.mg-saldo-lateral .etiqueta { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #92400e; }
+.mg-saldo-lateral.al-dia .etiqueta { color: var(--mg-verde-texto); }
+.mg-saldo-lateral .valor { font-size: 22px; font-weight: 800; color: #78350f; font-variant-numeric: tabular-nums; }
+.mg-saldo-lateral.al-dia .valor { color: var(--mg-verde-texto); }
+
+.mg-lateral .mg-movimientos { padding: 4px 0 0; }
+.mg-lateral .mg-movimientos li { padding: 9px 0; }
+.mg-lateral .mg-mov-icono { width: 30px; height: 30px; font-size: 14px; border-radius: 8px; }
+.mg-datos { list-style: none; padding: 0; margin: 14px 0 0; font-size: 14px; }
+.mg-datos li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--mg-borde); }
+.mg-datos li span { color: var(--mg-texto-suave); }
+.mg-datos li b { text-align: right; word-break: break-all; }

@@ -22,10 +22,16 @@ $textoBoton = 'Guardar cambios';
     </div>
 </div>
 
-<section class="mg-tarjeta" style="max-width: 820px">
-    <div class="mg-tarjeta-cuerpo">
-        <?php require __DIR__ . '/_form.php'; ?>
-    </div>
-</section>
+<div class="mg-form-layout">
+    <section class="mg-tarjeta">
+        <div class="mg-tarjeta-cuerpo">
+            <?php require __DIR__ . '/_form.php'; ?>
+        </div>
+    </section>
+
+    <aside class="mg-lateral" aria-label="Estado de cuenta">
+        <?php require __DIR__ . '/_resumen.php'; ?>
+    </aside>
+</div>
 
 <?php require __DIR__ . '/../layout/footer.php'; ?>

@@ -14,10 +14,6 @@ $hoy = $panel['hoy'];
         <h1><?= e($saludo) ?>, <?= e($primerNombre) ?></h1>
         <p>Así va la cartera de la cafetería hoy.</p>
     </div>
-    <div class="acciones d-flex gap-2">
-        <a href="<?= url('cliente/index') ?>" class="btn btn-claro"><i class="bi bi-search"></i> Buscar cliente</a>
-        <a href="<?= url('cliente/crear') ?>" class="btn btn-primary"><i class="bi bi-person-plus"></i> Nuevo cliente</a>
-    </div>
 </div>
 
 <section class="mg-kpis" aria-label="Indicadores">
