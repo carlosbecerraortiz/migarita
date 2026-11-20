@@ -1,0 +1,20 @@
+# Dependencias de Composer / Node
+/vendor/
+/node_modules/
+
+# Credenciales reales (usar app/config/email_config.example.php como plantilla)
+/app/config/email_config.php
+.env
+
+# Pruebas y cobertura
+/.phpunit.cache/
+/.phpunit.result.cache
+/coverage/
+/test-results/
+/playwright-report/
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
