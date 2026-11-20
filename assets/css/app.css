@@ -622,3 +622,54 @@ a { text-decoration: none; }
     .mg-login-movil { display: flex; justify-content: center; margin-bottom: 28px; }
     .mg-login-form { align-items: flex-start; padding-top: 56px; }
 }
+
+/* =====================================================================
+   Transiciones entre vistas (rápidas y sutiles)
+   ---------------------------------------------------------------------
+   - View Transitions API: el navegador hace un fundido entre la página
+     anterior y la nueva sin retrasar la carga. El menú y las barras
+     tienen nombre propio para quedarse quietos; solo cambia el contenido.
+   - Navegadores sin soporte: el contenido entra con la misma animación.
+   - Se desactiva todo si el usuario pidió "reducir movimiento".
+   ===================================================================== */
+
+@keyframes mg-vista-sale  { to   { opacity: 0; } }
+@keyframes mg-vista-entra { from { opacity: 0; transform: translateY(6px); } }
+@keyframes mg-aparecer    { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes mg-menu-abre   { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+
+@media (prefers-reduced-motion: no-preference) {
+    @view-transition { navigation: auto; }
+
+    .mg-menu        { view-transition-name: mg-menu; }
+    .mg-barra-movil { view-transition-name: mg-barra-movil; }
+    .mg-nav-movil   { view-transition-name: mg-nav-movil; }
+
+    ::view-transition-old(root) { animation: 120ms ease-out both mg-vista-sale; }
+    ::view-transition-new(root) { animation: 180ms cubic-bezier(.2, .7, .3, 1) both mg-vista-entra; }
+
+    /* Las barras fijas no se animan: son iguales en ambas páginas */
+    ::view-transition-group(mg-menu),
+    ::view-transition-group(mg-barra-movil),
+    ::view-transition-group(mg-nav-movil) { animation-duration: 0s; }
+
+    /* Respaldo para navegadores sin View Transitions entre páginas */
+    @supports not (view-transition-name: none) {
+        .mg-contenido, .mg-login-form .caja { animation: mg-vista-entra 180ms cubic-bezier(.2, .7, .3, 1) both; }
+    }
+
+    /* Detalles dentro de la página */
+    .dropdown-menu.show { animation: mg-menu-abre 120ms ease-out; transform-origin: top right; }
+    #bloqueMetodo:not([hidden]),
+    #bloqueFechas:not([hidden]),
+    #avisoAbono:not([hidden]),
+    #pagarTodo:not([hidden]),
+    .alert { animation: mg-aparecer 160ms ease-out; }
+    .mg-tabla tbody.refrescada tr { animation: mg-aparecer 140ms ease-out both; }
+
+    .mg-tarjeta, .btn, .mg-filtro, .mg-chip, .mg-nav a { transition: background-color .15s, border-color .15s, color .15s, box-shadow .15s; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+}

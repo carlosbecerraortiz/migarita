@@ -98,6 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 filas().forEach(tr => tr.remove());
                 filaVacia.insertAdjacentHTML("beforebegin", data.map(fila).join(""));
                 aplicarFiltro();
+                window.MG.refrescar(tabla);
             })
             .catch(err => console.error("Error en la búsqueda:", err));
     }
@@ -112,6 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
             filtro = boton.dataset.filtro;
             document.querySelectorAll("[data-filtro]").forEach(b => b.classList.toggle("activo", b === boton));
             aplicarFiltro();
+            window.MG.refrescar(tabla);
         });
     });
 

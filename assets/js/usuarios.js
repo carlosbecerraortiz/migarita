@@ -61,6 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 tabla.querySelectorAll("tr[data-id]").forEach(tr => tr.remove());
                 filaVacia.insertAdjacentHTML("beforebegin", data.map(fila).join(""));
                 contar();
+                window.MG.refrescar(tabla);
             })
             .catch(err => console.error("Error en la búsqueda:", err));
     }

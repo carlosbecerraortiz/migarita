@@ -47,7 +47,14 @@
         bootstrap.Modal.getOrCreateInstance(document.getElementById("modalAviso")).show();
     }
 
-    window.MG = { esc, dinero, iniciales, confirmar, aviso };
+    /** Reinicia la animación de entrada de las filas de una tabla (tras una búsqueda). */
+    function refrescar(tbody) {
+        tbody.classList.remove("refrescada");
+        void tbody.offsetWidth; // fuerza al navegador a reiniciar la animación
+        tbody.classList.add("refrescada");
+    }
+
+    window.MG = { esc, dinero, iniciales, confirmar, aviso, refrescar };
 
     document.addEventListener("DOMContentLoaded", () => {
         // Avisos de éxito: se cierran solos o con la X
