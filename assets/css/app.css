@@ -50,6 +50,11 @@
 * { -webkit-tap-highlight-color: transparent; }
 [hidden] { display: none !important; }
 
+/* Reservar siempre el espacio de la barra de desplazamiento: así el contenido no
+   "salta" de lado cuando la página pasa de caber en pantalla a necesitar scroll
+   (p. ej. al mostrar las fechas en "Generar informe" o al cambiar de página). */
+html { scrollbar-gutter: stable; }
+
 body {
     background: var(--mg-fondo);
     color: var(--mg-texto);

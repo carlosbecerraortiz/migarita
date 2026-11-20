@@ -42,8 +42,8 @@ $menu = [
 
     <link href="<?= asset('vendor/bootstrap/css/bootstrap.min.css') ?>" rel="stylesheet">
     <link href="<?= asset('vendor/bootstrap-icons/bootstrap-icons.css') ?>" rel="stylesheet">
-    <link href="<?= asset('css/app.css') ?>?v=7" rel="stylesheet">
-    <script src="<?= asset('js/entrada.js') ?>?v=7"></script>
+    <link href="<?= asset('css/app.css') ?>?v=8" rel="stylesheet">
+    <script src="<?= asset('js/entrada.js') ?>?v=8"></script>
 </head>
 <body data-session-id="<?= (int)$_SESSION['id'] ?>" data-session-rol="<?= e($rolSesion) ?>">
 <div class="mg-app">
