@@ -23,9 +23,14 @@ $porcentaje = $total > 0 ? ($cubiertas / $total) * 100 : 0;
 
 printf("\nCobertura de líneas: %.2f%% (%d de %d) — umbral mínimo: %.0f%%\n", $porcentaje, $cubiertas, $total, $umbral);
 
+// Colores ANSI (fondo verde / rojo) para que se vea claro en la demo.
+$verde = "\033[30;42m";
+$rojo = "\033[37;41m";
+$fin = "\033[0m";
+
 if ($porcentaje < $umbral) {
-    fwrite(STDERR, "FALLA: la cobertura está por debajo del umbral.\n");
+    fwrite(STDERR, "{$rojo} FALLA: la cobertura está por debajo del umbral. {$fin}\n");
     exit(1);
 }
 
-echo "OK: se cumple el umbral de cobertura.\n";
+echo "{$verde} OK: se cumple el umbral de cobertura. {$fin}\n";

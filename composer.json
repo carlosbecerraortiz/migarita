@@ -10,14 +10,14 @@
         "process-timeout": 0
     },
     "scripts": {
-        "test": "phpunit --no-coverage",
-        "test:unit": "phpunit --no-coverage --testsuite Unitarias",
-        "test:integration": "phpunit --no-coverage --testsuite Integracion",
-        "test:functional": "phpunit --no-coverage --testsuite Funcionales",
-        "test:testdox": "phpunit --no-coverage --testdox",
+        "test": "phpunit --colors=always --no-coverage",
+        "test:unit": "phpunit --colors=always --no-coverage --testsuite Unitarias",
+        "test:integration": "phpunit --colors=always --no-coverage --testsuite Integracion",
+        "test:functional": "phpunit --colors=always --no-coverage --testsuite Funcionales",
+        "test:testdox": "phpunit --colors=always --no-coverage --testdox",
         "test:coverage": [
             "@putenv XDEBUG_MODE=coverage",
-            "phpunit",
+            "phpunit --colors=always",
             "@php tests/verificar-cobertura.php 60"
         ]
     },
