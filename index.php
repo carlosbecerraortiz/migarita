@@ -9,25 +9,22 @@ $controllerName = ucfirst($partes[0]) . "Controller";
 $method = $partes[1] ?? 'index';
 $param = $partes[2] ?? null;
 
-$controllerFile = "controller/" . $controllerName . ".php";
+$controllerFile = __DIR__ . "/controller/" . $controllerName . ".php";
 
-if (!file_exists($controllerFile)) {
-    die("No existe el controlador: $controllerName");
+// Solo se aceptan nombres con letras (evita rutas como "../algo").
+if (!preg_match('/^[A-Za-z]+$/', $partes[0]) || !file_exists($controllerFile)) {
+    http_response_code(404);
+    die("No existe el controlador: " . htmlspecialchars($controllerName));
 }
 
 require_once $controllerFile;
 
 $controller = new $controllerName();
 
-if (!method_exists($controller, $method)) {
-    die("No existe el método $method en $controllerName");
-}
-
-if ($controllerName === "ClienteController" && $method === "buscarAjax") {
-    require_once "controller/ClienteController.php";
-    $controller = new ClienteController();
-    $controller->buscarAjax();
-    exit;
+// is_callable evita que se invoquen métodos privados desde la URL.
+if (!preg_match('/^[A-Za-z]+$/', $method) || !is_callable([$controller, $method])) {
+    http_response_code(404);
+    die("No existe el método " . htmlspecialchars($method) . " en $controllerName");
 }
 
 ($param !== null) ? $controller->$method($param) : $controller->$method();

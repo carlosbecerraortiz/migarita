@@ -3,13 +3,7 @@ require_once __DIR__ . "/Database.php";
 
 class UserModel extends Database {
 
-    protected $conn;
-
-    public function __construct()
-    {
-        parent::__construct(); 
-        $this->conn = parent::$conn ?? $this->conn;
-    }
+    // La conexión se hereda de Database (y se puede inyectar en pruebas).
 
     public function getAll() {
         $sql = "SELECT * FROM usuarios ORDER BY id ASC";

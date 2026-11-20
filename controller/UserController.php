@@ -1,20 +1,32 @@
 <?php
 require_once __DIR__ . "/../model/UserModel.php";
+require_once __DIR__ . "/../app/services/UsuarioService.php";
 
+/**
+ * Controlador de usuarios del sistema. Las reglas de permisos y validaciones
+ * viven en app/services/UsuarioService.php y app/validators/UsuarioValidator.php.
+ */
 class UserController
 {
-    private function volverGuardar($error, $cedula, $nombre, $apellido, $correo, $usuario, $rol = "")
-    {
-        header("Location: /mi_garita/index.php?url=user/crear&error=$error&cedula=$cedula&nombre=$nombre&apellido=$apellido&correo=$correo&usuario=$usuario&rol=$rol");
-        exit;
-    }
+    private const BASE = "/mi_garita/index.php?url=";
 
     public function __construct()
     {
         if (!isset($_SESSION['id'])) {
-            header("Location: /mi_garita/index.php?url=login/index");
+            header("Location: " . self::BASE . "login/index");
             exit;
         }
+    }
+
+    private function redirigir(string $ruta): void
+    {
+        header("Location: " . self::BASE . $ruta);
+        exit;
+    }
+
+    private function servicio(): UsuarioService
+    {
+        return new UsuarioService(new UserModel());
     }
 
     public function index()
@@ -35,9 +47,8 @@ class UserController
 
     public function crear()
     {
-        if ($_SESSION['rol'] !== 'superusuario') {
-            header("Location: /mi_garita/index.php?url=user/index&error=sin_permisos");
-            exit;
+        if (!UsuarioService::esSuperusuario($_SESSION['rol'] ?? null)) {
+            $this->redirigir("user/index&error=sin_permisos");
         }
 
         require __DIR__ . "/../view/user/crear.php";
@@ -45,108 +56,27 @@ class UserController
 
     public function guardar()
     {
-        if ($_SESSION['rol'] !== 'superusuario') {
-            header("Location: /mi_garita/index.php?url=user/index&error=sin_permisos");
-            exit;
+        $error = $this->servicio()->crear($_POST, $_SESSION['rol'] ?? null);
+
+        if ($error === 'sin_permisos') {
+            $this->redirigir("user/index&error=sin_permisos");
         }
 
-        $cedula   = trim($_POST["cedula"] ?? "");
-        $nombre   = trim($_POST["nombre"] ?? "");
-        $apellido = trim($_POST["apellido"] ?? "");
-        $correo   = trim($_POST["correo"] ?? "");
-        $usuario  = trim($_POST["usuario"] ?? "");
-        $password = $_POST["password"] ?? "";
-        $rol      = trim($_POST["rol"] ?? "");
-
-        $userModel = new UserModel();
-
-        // === VALIDACIONES ===
-        if ($cedula === "") {
-            $this->volverGuardar("cedula_vacia", $cedula, $nombre, $apellido, $correo, $usuario, $rol);
+        if ($error !== null) {
+            // Se devuelven los datos (sin la contraseña) para no perder lo escrito.
+            $datos = UsuarioValidator::normalizar($_POST);
+            unset($datos['password']);
+            $datos += ['rol' => ''];
+            $this->redirigir("user/crear&" . http_build_query(['error' => $error] + $datos));
         }
 
-        if (!preg_match('/^[0-9]+$/', $cedula)) {
-            $this->volverGuardar("cedula_invalida", $cedula, $nombre, $apellido, $correo, $usuario, $rol);
-        }
-
-        if ($userModel->getByCedula($cedula)) {
-            $this->volverGuardar("cedula_duplicada", $cedula, $nombre, $apellido, $correo, $usuario, $rol);
-        }
-
-        if ($nombre === "") {
-            $this->volverGuardar("nombre_vacio", $cedula, $nombre, $apellido, $correo, $usuario, $rol);
-        }
-
-        if (!preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/', $nombre)) {
-            $this->volverGuardar("nombre_invalido", $cedula, $nombre, $apellido, $correo, $usuario, $rol);
-        }
-
-        if ($apellido === "") {
-            $this->volverGuardar("apellido_vacio", $cedula, $nombre, $apellido, $correo, $usuario, $rol);
-        }
-
-        if (!preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/', $apellido)) {
-            $this->volverGuardar("apellido_invalido", $cedula, $nombre, $apellido, $correo, $usuario, $rol);
-        }
-
-        if ($correo === "") {
-            $this->volverGuardar("correo_vacio", $cedula, $nombre, $apellido, $correo, $usuario, $rol);
-        }
-
-        if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-            $this->volverGuardar("correo_invalido", $cedula, $nombre, $apellido, $correo, $usuario, $rol);
-        }
-
-        if ($userModel->getByCorreo($correo)) {
-            $this->volverGuardar("correo_duplicado", $cedula, $nombre, $apellido, $correo, $usuario, $rol);
-        }
-
-        if ($usuario === "") {
-            $this->volverGuardar("usuario_vacio", $cedula, $nombre, $apellido, $correo, $usuario, $rol);
-        }
-
-        if ($userModel->getByUsuario($usuario)) {
-            $this->volverGuardar("usuario_duplicado", $cedula, $nombre, $apellido, $correo, $usuario, $rol);
-        }
-
-        if ($password === "") {
-            $this->volverGuardar("password_vacio", $cedula, $nombre, $apellido, $correo, $usuario, $rol);
-        }
-
-        if (strlen($password) < 6) {
-            $this->volverGuardar("password_corto", $cedula, $nombre, $apellido, $correo, $usuario, $rol);
-        }
-
-        if ($rol === "") {
-            $this->volverGuardar("rol_vacio", $cedula, $nombre, $apellido, $correo, $usuario, $rol);
-        }
-
-        if ($rol !== "usuario" && $rol !== "superusuario") {
-            $this->volverGuardar("rol_invalido", $cedula, $nombre, $apellido, $correo, $usuario, $rol);
-        }
-
-        // === GUARDAR ===
-        $data = [
-            "cedula"        => $cedula,
-            "nombre"        => $nombre,
-            "apellido"      => $apellido,
-            "correo"        => $correo,
-            "usuario"       => $usuario,
-            "password_hash" => hash('sha256', $password),
-            "rol"           => $rol
-        ];
-
-        $userModel->insert($data);
-
-        header("Location: /mi_garita/index.php?url=user/index&ok=creado");
-        exit;
+        $this->redirigir("user/index&ok=creado");
     }
 
     public function editar($id)
     {
-        if ($_SESSION['id'] != $id && $_SESSION['rol'] !== 'superusuario') {
-            header("Location: /mi_garita/index.php?url=user/index&error=sin_permisos");
-            exit;
+        if (!UsuarioService::puedeEditar($_SESSION['id'], $_SESSION['rol'] ?? null, $id)) {
+            $this->redirigir("user/index&error=sin_permisos");
         }
 
         $userModel = new UserModel();
@@ -157,147 +87,36 @@ class UserController
 
     public function actualizar($id)
     {
-        if ($_SESSION['id'] != $id && $_SESSION['rol'] !== 'superusuario') {
-            header("Location: /mi_garita/index.php?url=user/index&error=sin_permisos");
-            exit;
+        $error = $this->servicio()->actualizar($id, $_POST, $_SESSION['id'], $_SESSION['rol'] ?? null);
+
+        if ($error === 'sin_permisos') {
+            $this->redirigir("user/index&error=sin_permisos");
         }
 
-        $userModel = new UserModel();
-
-        // === VALIDACIONES ===
-        if (empty($_POST["cedula"])) {
-            header("Location: /mi_garita/index.php?url=user/editar/$id&error=cedula_vacia");
-            exit;
+        if ($error !== null) {
+            $this->redirigir("user/editar/$id&error=$error");
         }
 
-        if (!ctype_digit($_POST["cedula"])) {
-            header("Location: /mi_garita/index.php?url=user/editar/$id&error=cedula_invalida");
-            exit;
-        }
-
-        $cedulaIngresada = $_POST["cedula"];
-        $existe = $userModel->getByCedula($cedulaIngresada);
-
-        if ($existe && $existe["id"] != $id) {
-            header("Location: /mi_garita/index.php?url=user/editar/$id&error=cedula_duplicada");
-            exit;
-        }
-
-        if (empty(trim($_POST["nombre"]))) {
-            header("Location: /mi_garita/index.php?url=user/editar/$id&error=nombre_vacio");
-            exit;
-        }
-
-        if (!preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/', $_POST["nombre"])) {
-            header("Location: /mi_garita/index.php?url=user/editar/$id&error=nombre_invalido");
-            exit;
-        }
-
-        if (empty(trim($_POST["apellido"]))) {
-            header("Location: /mi_garita/index.php?url=user/editar/$id&error=apellido_vacio");
-            exit;
-        }
-
-        if (!preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/', $_POST["apellido"])) {
-            header("Location: /mi_garita/index.php?url=user/editar/$id&error=apellido_invalido");
-            exit;
-        }
-
-        if (empty($_POST["correo"])) {
-            header("Location: /mi_garita/index.php?url=user/editar/$id&error=correo_vacio");
-            exit;
-        }
-
-        if (!filter_var($_POST["correo"], FILTER_VALIDATE_EMAIL)) {
-            header("Location: /mi_garita/index.php?url=user/editar/$id&error=correo_invalido");
-            exit;
-        }
-
-        $correoExiste = $userModel->getByCorreo($_POST["correo"]);
-        if ($correoExiste && $correoExiste["id"] != $id) {
-            header("Location: /mi_garita/index.php?url=user/editar/$id&error=correo_duplicado");
-            exit;
-        }
-
-        if (empty($_POST["usuario"])) {
-            header("Location: /mi_garita/index.php?url=user/editar/$id&error=usuario_vacio");
-            exit;
-        }
-
-        $usuarioExiste = $userModel->getByUsuario($_POST["usuario"]);
-        if ($usuarioExiste && $usuarioExiste["id"] != $id) {
-            header("Location: /mi_garita/index.php?url=user/editar/$id&error=usuario_duplicado");
-            exit;
-        }
-
-        if (!empty($_POST["password"]) && strlen($_POST["password"]) < 6) {
-            header("Location: /mi_garita/index.php?url=user/editar/$id&error=password_corto");
-            exit;
-        }
-
-        // DATOS LISTOS
-        $data = [
-            "cedula"   => $_POST["cedula"],
-            "nombre"   => $_POST["nombre"],
-            "apellido" => $_POST["apellido"],
-            "correo"   => $_POST["correo"],
-            "usuario"  => $_POST["usuario"]
-        ];
-
-        if (!empty($_POST["password"])) {
-            $data["password_hash"] = hash('sha256', $_POST["password"]);
-        }
-
-        if ($_SESSION['rol'] === 'superusuario' && isset($_POST["rol"])) {
-            $rol = trim($_POST["rol"]);
-            
-            if ($rol !== "usuario" && $rol !== "superusuario") {
-                header("Location: /mi_garita/index.php?url=user/editar/$id&error=rol_invalido");
-                exit;
-            }
-            
-            if ($_SESSION['id'] == $id && $_SESSION['rol'] === 'superusuario') {
-                $usuarioActual = $userModel->getById($id);
-                if ($usuarioActual['rol'] === 'superusuario' && $rol !== 'superusuario') {
-                    header("Location: /mi_garita/index.php?url=user/editar/$id&error=no_auto_cambiar_rol");
-                    exit;
-                }
-            }
-            
-            $data["rol"] = $rol;
-        }
-
-        // ACTUALIZAR
-        $userModel->update($id, $data);
-
-        header("Location: /mi_garita/index.php?url=user/index&ok=editado");
-        exit;
+        $this->redirigir("user/index&ok=editado");
     }
 
     public function eliminarAjax()
     {
-        if ($_SESSION['rol'] !== 'superusuario') {
-            echo json_encode(["error" => "sin_permisos"]);
-            return;
+        header("Content-Type: application/json; charset=utf-8");
+
+        $resultado = $this->servicio()->eliminar($_POST['id'] ?? null, $_SESSION['id'], $_SESSION['rol'] ?? null);
+
+        $codigos = [
+            'sin_permisos'   => 403,
+            'id_no_recibido' => 400,
+            'auto_eliminar'  => 422,
+        ];
+
+        if (isset($resultado['error'])) {
+            http_response_code($codigos[$resultado['error']] ?? 400);
         }
 
-        if (!isset($_POST['id'])) {
-            echo json_encode(["error" => "id_no_recibido"]);
-            return;
-        }
-
-        $id = $_POST['id'];
-
-        if ($_SESSION['id'] == $id) {
-            echo json_encode(["error" => "auto_eliminar"]);
-            return;
-        }
-
-        // ELIMINAR
-        $userModel = new UserModel();
-        $userModel->delete($id);
-
-        echo json_encode(["ok" => true]);
+        echo json_encode($resultado);
     }
 
     public function buscarAjax()

@@ -1,6 +1,7 @@
 <?php
-require_once "model/UserModel.php";
-require_once "model/BitacoraModel.php";
+require_once __DIR__ . "/../model/UserModel.php";
+require_once __DIR__ . "/../model/BitacoraModel.php";
+require_once __DIR__ . "/../app/services/AuthService.php";
 
 class LoginController
 {
@@ -11,79 +12,33 @@ class LoginController
 
     public function autenticar()
     {
-        $userModel = new UserModel();
-        $bitacora = new BitacoraModel();
+        $auth = new AuthService(new UserModel(), new BitacoraModel());
 
-        $usuario = $_POST['username'] ?? '';
-        $password = $_POST['password'] ?? '';
+        $resultado = $auth->autenticar(
+            (string)($_POST['username'] ?? ''),
+            (string)($_POST['password'] ?? ''),
+            $_SERVER["REMOTE_ADDR"] ?? '',
+            $_SERVER["HTTP_USER_AGENT"] ?? ''
+        );
 
-        $user = $userModel->getByUsuario($usuario);
-
-        $ip  = $_SERVER["REMOTE_ADDR"];
-        $ua  = $_SERVER["HTTP_USER_AGENT"];
-        $so  = $this->detectarSO($ua);
-
-        if (!$user) {
-            $bitacora->registrarLogin(
-                null,
-                $ip,
-                $ua,
-                $so,
-                0
-            );
-
-            header("Location: /mi_garita/index.php?url=login/index&error=usuario");
+        if (!$resultado['ok']) {
+            header("Location: /mi_garita/index.php?url=login/index&error=" . $resultado['error']);
             exit;
         }
 
-        if (hash('sha256', $password) !== $user['password_hash']) {
+        $user = $resultado['usuario'];
 
-            $bitacora->registrarLogin(
-                $user["id"],
-                $ip,
-                $ua,
-                $so,
-                0
-            );
-
-            header("Location: /mi_garita/index.php?url=login/index&error=contrasena");
-            exit;
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
         }
+        session_regenerate_id(true);
 
-        session_start();
         $_SESSION['id']      = $user['id'];
         $_SESSION['usuario'] = $user['usuario'];
         $_SESSION['nombre']  = $user['nombre'];
-        $_SESSION['rol']     = $user['rol']; // ← AGREGADO
-
-        $bitacora->registrarLogin(
-            $user["id"],
-            $ip,
-            $ua,
-            $so,
-            1
-        );
+        $_SESSION['rol']     = $user['rol'];
 
         header("Location: /mi_garita/index.php?url=cliente/index");
         exit;
-    }
-
-    private function detectarSO($userAgent)
-    {
-        $sistemas = [
-            'Windows' => 'Windows',
-            'Mac' => 'Mac OS',
-            'Linux' => 'Linux',
-            'Android' => 'Android',
-            'iPhone' => 'iOS'
-        ];
-
-        foreach ($sistemas as $key => $value) {
-            if (stripos($userAgent, $key) !== false) {
-                return $value;
-            }
-        }
-
-        return "Desconocido";
     }
 }

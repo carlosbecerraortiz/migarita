@@ -5,18 +5,45 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+/**
+ * Envío de correos de notificación al cliente.
+ *
+ * Design for Testability:
+ *  - $config se puede inyectar (si no, se lee app/config/email_config.php).
+ *  - $mailerFactory crea el objeto PHPMailer; en las pruebas se inyecta una
+ *    fábrica que devuelve un MOCK, así nunca se conecta a un servidor SMTP real.
+ *  - Si no hay configuración, o MIGARITA_MAIL_ENABLED=0, no se envía nada.
+ */
 class EmailService
 {
     private $config;
+    private $mailerFactory;
 
-    public function __construct()
+    public function __construct(?array $config = null, ?callable $mailerFactory = null)
     {
-        $this->config = require __DIR__ . '/../config/email_config.php';
+        if ($config === null) {
+            $archivo = __DIR__ . '/../config/email_config.php';
+            $config = is_file($archivo) ? require $archivo : null;
+        }
+
+        $this->config = $config;
+        $this->mailerFactory = $mailerFactory ?? fn() => new PHPMailer(true);
+    }
+
+    public function estaHabilitado(): bool
+    {
+        return is_array($this->config)
+            && !empty($this->config['host'])
+            && getenv('MIGARITA_MAIL_ENABLED') !== '0';
     }
 
     public function enviarNotificacionMovimiento($datosCliente, $datosMovimiento, $usuarioNombre)
     {
-        $mail = new PHPMailer(true);
+        if (!$this->estaHabilitado()) {
+            return false;
+        }
+
+        $mail = ($this->mailerFactory)();
 
         try {
             // Configuración del servidor SMTP
