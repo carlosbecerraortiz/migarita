@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache"
+         executionOrder="depends,defects"
+         failOnWarning="true"
+         failOnRisky="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
+         testdox="false">
+
+    <testsuites>
+        <testsuite name="Unitarias">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Integracion">
+            <directory>tests/Integration</directory>
+        </testsuite>
+        <testsuite name="Funcionales">
+            <directory>tests/Functional</directory>
+        </testsuite>
+    </testsuites>
+
+    <!-- Cobertura medida sobre la capa de lógica de negocio: servicios, validadores y modelos -->
+    <source>
+        <include>
+            <directory suffix=".php">app</directory>
+            <directory suffix=".php">model</directory>
+        </include>
+        <exclude>
+            <directory>app/config</directory>
+        </exclude>
+    </source>
+
+    <coverage>
+        <report>
+            <html outputDirectory="coverage/html"/>
+            <clover outputFile="coverage/clover.xml"/>
+            <text outputFile="php://stdout" showUncoveredFiles="true" showOnlySummary="false"/>
+        </report>
+    </coverage>
+
+    <php>
+        <env name="MIGARITA_MAIL_ENABLED" value="0" force="true"/>
+    </php>
+</phpunit>

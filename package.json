@@ -1,0 +1,13 @@
+{
+  "name": "migarita-e2e",
+  "private": true,
+  "description": "Prueba E2E (Playwright) de MiGarita",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:ver": "playwright test --headed",
+    "test:e2e:reporte": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
+}
