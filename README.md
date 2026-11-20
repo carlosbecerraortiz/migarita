@@ -32,6 +32,7 @@ tests/            pruebas: Unit, Integration, Functional, E2E
 ```bash
 composer test            # 192 pruebas
 composer test:coverage   # cobertura (consola + HTML), falla si es menor al 60 %
+composer coverage:ver    # abre el resumen de cobertura en español
 ```
 
 Instrucciones completas, mapa de la suite, uso de IA y prueba de fuego en **[TESTING.md](TESTING.md)**.

@@ -18,8 +18,10 @@
         "test:coverage": [
             "@putenv XDEBUG_MODE=coverage",
             "phpunit --colors=always",
+            "@php tests/reporte/generar-resumen.php",
             "@php tests/verificar-cobertura.php 60"
-        ]
+        ],
+        "coverage:ver": "start \"\" coverage\\resumen.html"
     },
     "scripts-descriptions": {
         "test": "Ejecuta toda la suite (unitarias + integración + funcionales)",
@@ -27,6 +29,7 @@
         "test:integration": "Solo pruebas de integración (BD SQLite en memoria)",
         "test:functional": "Solo pruebas funcionales HTTP (levanta la app con php -S)",
         "test:testdox": "Toda la suite mostrando cada prueba como frase legible",
-        "test:coverage": "Suite completa + reporte de cobertura (consola y HTML en coverage/html) + falla si es < 60%"
+        "test:coverage": "Suite completa + reporte de cobertura (consola, coverage/resumen.html y coverage/html) + falla si es < 60%",
+        "coverage:ver": "Abre en el navegador el resumen de cobertura en español"
     }
 }

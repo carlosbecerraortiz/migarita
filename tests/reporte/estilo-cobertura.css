@@ -1,0 +1,164 @@
+/*
+ * Estilo personalizado para el reporte HTML de cobertura de PHPUnit.
+ * PHPUnit lo copia como _css/custom.css (ver customCssFile en phpunit.xml).
+ * Objetivo: que el reporte detallado sea fácil de leer en clase y en el proyector.
+ */
+
+:root {
+    --fondo: #f6f7f9;
+    --superficie: #ffffff;
+    --borde: #e3e6ea;
+    --texto: #1f2933;
+    --texto-suave: #5f6b7a;
+    --acento: #2563eb;
+    --verde: #1f9d55;
+    --verde-claro: #e7f6ee;
+    --ambar: #b7791f;
+    --ambar-claro: #fdf5e3;
+    --rojo: #c53030;
+    --rojo-claro: #fdecec;
+}
+
+body {
+    background: var(--fondo);
+    color: var(--texto);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.container-fluid {
+    max-width: 1280px;
+    padding: 0 24px;
+}
+
+/* Barra superior agregada por tests/reporte/generar-resumen.php */
+.mg-barra {
+    background: #111827;
+    color: #fff;
+    padding: 10px 24px;
+    font-size: 14px;
+}
+.mg-barra a {
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+}
+.mg-barra a:hover { text-decoration: underline; }
+
+/* Ruta (breadcrumb) */
+header {
+    margin: 20px 0 12px;
+}
+.breadcrumb {
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    padding: 12px 18px;
+    margin: 0;
+    font-size: 15px;
+}
+.breadcrumb a { color: var(--acento); text-decoration: none; font-weight: 500; }
+.breadcrumb a:hover { text-decoration: underline; }
+
+/* Tabla de resumen */
+.table-responsive {
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+}
+.table {
+    margin: 0;
+    color: var(--texto);
+}
+.table-bordered,
+.table-bordered td,
+.table-bordered th {
+    border-color: var(--borde) !important;
+}
+.table thead td,
+.table thead th {
+    background: #f1f3f6;
+    color: var(--texto-suave);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: 10px 12px;
+}
+.table tbody td {
+    padding: 10px 12px;
+    vertical-align: middle;
+    font-size: 14px;
+}
+.table tbody td:first-child {
+    font-weight: 600;
+}
+.table tbody td a {
+    color: var(--acento);
+    text-decoration: none;
+}
+.table tbody td a:hover { text-decoration: underline; }
+
+/* Filas coloreadas por nivel de cobertura */
+td.success, tr.success td { background-color: var(--verde-claro) !important; }
+td.warning, tr.warning td { background-color: var(--ambar-claro) !important; }
+td.danger,  tr.danger td  { background-color: var(--rojo-claro) !important; }
+
+/* Barras de progreso más finas y legibles */
+.progress {
+    height: 10px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    min-width: 90px;
+}
+.progress-bar.bg-success { background-color: var(--verde) !important; }
+.progress-bar.bg-warning { background-color: var(--ambar) !important; }
+.progress-bar.bg-danger  { background-color: var(--rojo) !important; }
+
+td.big { font-variant-numeric: tabular-nums; font-weight: 600; }
+td.small { font-variant-numeric: tabular-nums; color: var(--texto-suave); }
+
+/* Código fuente */
+#code {
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    margin-top: 20px;
+    overflow: hidden;
+}
+#code td, #code .codeLine, .codeLine {
+    font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    /* Sin ligaduras: que "===" y "=>" se vean tal cual se escriben */
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
+}
+#code tr td:first-child a {
+    color: #9aa4b2;
+    text-decoration: none;
+}
+.covered-by-small-tests,
+.covered-by-medium-tests,
+.covered-by-large-tests { background-color: var(--verde-claro) !important; }
+.not-covered  { background-color: var(--rojo-claro) !important; }
+.not-coverable { background-color: transparent; }
+
+/* Leyenda y pie */
+h4 { font-size: 18px; font-weight: 700; margin-top: 28px; }
+.legend {
+    display: inline-block;
+    border-radius: 6px;
+    padding: 4px 10px;
+    margin: 2px 4px 2px 0;
+    font-size: 13px;
+}
+footer hr { border-color: var(--borde); }
+footer p, footer small { color: var(--texto-suave); font-size: 13px; }
+
+/* Tablero (dashboard) */
+h2 { font-size: 22px; font-weight: 700; margin-top: 24px; }
+h3 { font-size: 17px; font-weight: 600; color: var(--texto-suave); }

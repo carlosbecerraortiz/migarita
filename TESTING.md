@@ -47,7 +47,13 @@ composer test:coverage
 ```
 
 - **Consola:** tabla con el porcentaje de clases, métodos y líneas de cada clase.
-- **HTML:** abrir `coverage/html/index.html` en el navegador.
+- **Resumen en español (recomendado para la sustentación):** `coverage/resumen.html`, o el comando `composer coverage:ver` que lo abre en el navegador. Muestra:
+  - el porcentaje total, si cumple el 60 % y cuántas pruebas pasaron por nivel;
+  - la cobertura por capa (validadores, servicios, modelos), con lo que hace cada archivo;
+  - una guía de cómo leer el reporte.
+
+  Lo genera [tests/reporte/generar-resumen.php](tests/reporte/generar-resumen.php).
+- **HTML detallado de PHPUnit:** `coverage/html/index.html`. Muestra el código línea por línea (verde = probado, rojo = sin probar). Usa un estilo propio más legible ([tests/reporte/estilo-cobertura.css](tests/reporte/estilo-cobertura.css)) y cada página trae un enlace de regreso al resumen.
 - **Umbral:** PHPUnit no trae un `--fail-under` como `pytest-cov`, así que [tests/verificar-cobertura.php](tests/verificar-cobertura.php) lee `coverage/clover.xml` y termina con error si la cobertura es menor a 60 %.
 
 ### Prueba E2E en navegador (Playwright)
